@@ -98,7 +98,6 @@ class Account(AbstractBaseUser, PermissionsMixin):
     objects = AccountManager()
 
     USERNAME_FIELD = "email"
-    # Поля, обязательные при создании суперюзера через консоль (кроме email и пароля)
     REQUIRED_FIELDS = ["name", "surname"]
 
     def __str__(self):
@@ -132,3 +131,82 @@ class StudentProfile(models.Model):
     group = models.CharField(max_length=255, blank=True, null=False)
     def __str__(self):
         return f"Profile for {self.user.email}"
+
+
+class Discipline(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Category(models.Model):
+    discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE, related_name="categories")
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    color = models.CharField(max_length=7)
+    text_color = models.CharField(max_length=7, default="#FFFFFF")
+
+    def __str__(self):
+        return f"[{self.discipline.name}] {self.name}"
+
+
+class Task(models.Model):
+    discipline = models.ForeignKey(Discipline, on_delete=models.PROTECT)
+    complexity = models.CharField(max_length=10)  # А+Б-, А-Б+ и т.д.
+    title = models.CharField(max_length=255)
+    task_text = models.TextField()  # Основной текст задачи
+    task_description = models.TextField()  # Текст самого задания
+    reference_markup = models.JSONField(default=list, blank=True)  # Эталон раскраски
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+
+class TaskQuestion(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="questions")
+    text = models.TextField()
+    is_correct = models.BooleanField(default=False)  # Релевантен ли вопрос задаче
+
+    def __str__(self):
+        return f"Q: {self.text[:50]}"
+
+
+class TaskFinalOption(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="final_options")
+    text = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False)  # Является ли этот вариант правильным
+
+    def __str__(self):
+        return self.text
+
+
+class Student(models.Model):
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=100)
+    surname = models.CharField(max_length=100)
+    group = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.surname} {self.name}"
+
+
+class Submission(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+
+    # Ответы студента
+    answer_markup = models.JSONField(default=list)
+    selected_question_ids = models.JSONField(default=list)  # Массив ID выбранных вопросов
+    selected_final_option_id = models.IntegerField(null=True)  # ID выбранного финала
+
+    # Расчитанные баллы
+    score_markup = models.FloatField(default=0.0)  # За раскраску
+    score_questions = models.FloatField(default=0.0)  # За выбор вопросов чат-бота
+    score_final = models.FloatField(default=0.0)  # За итоговый выбор
+    total_score = models.FloatField(default=0.0)  # Средний балл
+
+    created_at = models.DateTimeField(auto_now_add=True)

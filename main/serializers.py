@@ -1,7 +1,7 @@
 from rest_framework import serializers, generics
 from django.contrib.auth import get_user_model
 from .models import (
-    StudentProfile
+    StudentProfile, Category, Task, Submission, TaskQuestion, TaskFinalOption, Discipline
 )
 
 
@@ -102,3 +102,45 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProfile
         fields = ("id", "user", "group")
+
+class DisciplineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discipline
+        fields = '__all__'
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+class TaskQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskQuestion
+        fields = ['id', 'text', 'is_correct']
+
+class TaskFinalOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskFinalOption
+        fields = ['id', 'text', 'is_correct']
+
+class TaskSerializer(serializers.ModelSerializer):
+    questions = TaskQuestionSerializer(many=True, read_only=True)
+    final_options = TaskFinalOptionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        for q in ret.get('questions', []):
+            q.pop('is_correct', None)
+        for o in ret.get('final_options', []):
+            o.pop('is_correct', None)
+        return ret
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Submission
+        fields = '__all__'
+        read_only_fields = ['score_markup', 'score_questions', 'score_final', 'total_score']
