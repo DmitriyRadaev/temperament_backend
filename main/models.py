@@ -133,80 +133,64 @@ class StudentProfile(models.Model):
         return f"Profile for {self.user.email}"
 
 
-class Discipline(models.Model):
+
+# ЛОГИКА
+
+
+class TaskCategory(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
+    def __str__(self): return self.name
 
-    def __str__(self):
-        return self.name
+class CategoryConfig(models.Model):
+    category = models.OneToOneField(TaskCategory, on_delete=models.CASCADE, related_name="config")
+    button_title = models.CharField(max_length=255)
+    short_description = models.TextField()
+    detail_description = models.TextField()
 
+class TaskComplexity(models.Model):
+    name = models.CharField(max_length=50)
+    level = models.PositiveSmallIntegerField(unique=True)
+    def __str__(self): return self.name
 
-class Category(models.Model):
-    discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE, related_name="categories")
+class ColorsMarkup(models.Model):
+    name = models.CharField(max_length=100)
+    style = models.CharField(max_length=255) # bg-blue-200
+    def __str__(self): return self.name
+
+class CategoryMarkup(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
-    color = models.CharField(max_length=7)
-    text_color = models.CharField(max_length=7, default="#FFFFFF")
-
-    def __str__(self):
-        return f"[{self.discipline.name}] {self.name}"
-
+    color_markup = models.ForeignKey(ColorsMarkup, on_delete=models.CASCADE)
+    task_category = models.ForeignKey(TaskCategory, on_delete=models.CASCADE, related_name="markup_buttons")
 
 class Task(models.Model):
-    discipline = models.ForeignKey(Discipline, on_delete=models.PROTECT)
-    complexity = models.CharField(max_length=10)  # А+Б-, А-Б+ и т.д.
-    title = models.CharField(max_length=255)
-    task_text = models.TextField()  # Основной текст задачи
-    task_description = models.TextField()  # Текст самого задания
-    reference_markup = models.JSONField(default=list, blank=True)  # Эталон раскраски
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-
+    category = models.ForeignKey(TaskCategory, on_delete=models.CASCADE, related_name="tasks")
+    complexity = models.ForeignKey(TaskComplexity, on_delete=models.PROTECT)
+    text = models.TextField()
+    condition = models.TextField()
+    reference_markup = models.JSONField(default=list)
+    correct_characteristics = models.JSONField(default=dict)
 
 class TaskQuestion(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="questions")
-    text = models.TextField()
-    is_correct = models.BooleanField(default=False)  # Релевантен ли вопрос задаче
+    text = models.TextField() # question
+    answer = models.TextField() # answer
+    is_correct = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"Q: {self.text[:50]}"
-
-
-class TaskFinalOption(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="final_options")
+class TaskAnswer(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="answers")
     text = models.CharField(max_length=255)
-    is_correct = models.BooleanField(default=False)  # Является ли этот вариант правильным
-
-    def __str__(self):
-        return self.text
-
-
-class Student(models.Model):
-    email = models.EmailField(unique=True)
-    name = models.CharField(max_length=100)
-    surname = models.CharField(max_length=100)
-    group = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.surname} {self.name}"
-
+    is_correct = models.BooleanField(default=False)
 
 class Submission(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-
-    # Ответы студента
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     answer_markup = models.JSONField(default=list)
-    selected_question_ids = models.JSONField(default=list)  # Массив ID выбранных вопросов
-    selected_final_option_id = models.IntegerField(null=True)  # ID выбранного финала
-
-    # Расчитанные баллы
-    score_markup = models.FloatField(default=0.0)  # За раскраску
-    score_questions = models.FloatField(default=0.0)  # За выбор вопросов чат-бота
-    score_final = models.FloatField(default=0.0)  # За итоговый выбор
-    total_score = models.FloatField(default=0.0)  # Средний балл
-
+    selected_question_ids = models.JSONField(default=list)
+    student_characteristics = models.JSONField(default=dict)
+    selected_answer_id = models.IntegerField(null=True)
+    total_score = models.FloatField(default=0.0)
+    grade = models.CharField(max_length=50)
+    spent_time = models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)

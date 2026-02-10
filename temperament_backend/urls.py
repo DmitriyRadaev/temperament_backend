@@ -17,29 +17,38 @@ urlpatterns = [
     path("api/auth/register/student/", views.StudentRegisterView.as_view(), name="student_register"),
     path("api/auth/register/admin/", views.AdminRegisterView.as_view(), name="admin_register"),
 
-    # Задачи
-    path("api/categories/all/", views.CategoryListAPI.as_view(), name="category_all"),
-    path("api/categories/create/", views.CategoryCreateAPI.as_view(), name="category_create"),
-    path("api/categories/<int:pk>/delete/", views.CategoryDeleteAPI.as_view(), name="category_delete"),
-    # Дисциплины
-    path("api/disciplines/all/", views.DisciplineListAPI.as_view(), name="discipline-all"),
-    path("api/disciplines/create/", views.DisciplineCreateAPI.as_view(), name="discipline-create"),
-    path("api/disciplines/<int:pk>/delete/", views.DisciplineDeleteAPI.as_view(), name="discipline-delete"),
+    path("api/task-category/all/", views.TaskCategoryCRUD.as_view()),
+    path("api/task-category/create/", views.TaskCategoryCRUD.as_view()),
+    path("api/task-category/<int:pk>/update/", views.TaskCategoryCRUD.as_view()),
+    path("api/category-config/create/", views.CategoryConfigCRUD.as_view()),
+    path("api/category-config/<int:pk>/update/", views.CategoryConfigCRUD.as_view()),
 
-    # Задачи
-    path("api/tasks/all/", views.TaskListAPI.as_view(), name="task_all"),
-    path("api/tasks/create/", views.TaskCreateAPI.as_view(), name="task-create"),
-    path("api/tasks/<int:pk>/detail/", views.TaskDetailAPI.as_view(), name="task_detail"),
-    path("api/tasks/<int:pk>/update/", views.TaskUpdateAPI.as_view(), name="task_update"),
-    path("api/tasks/<int:pk>/delete/", views.TaskDeleteAPI.as_view(), name="task_delete"),
+    # Справочники (Base)
+    path("api/complexity/all/", views.ComplexityCRUD.as_view()),
+    path("api/complexity/create/", views.ComplexityCRUD.as_view()),
+    path("api/colors/all/", views.ColorsMarkupCRUD.as_view()),
+    path("api/colors/create/", views.ColorsMarkupCRUD.as_view()),
+    path("api/markup/all/", views.CategoryMarkupCRUD.as_view()),
+    path("api/markup/create/", views.CategoryMarkupCRUD.as_view()),
+    path("api/markup/<int:pk>/update/", views.CategoryMarkupCRUD.as_view()),
 
-    # Забитие контента (Вопросы и Опции)
-    path("api/questions/create/", views.QuestionCreateAPI.as_view(), name="question_create"),
-    path("api/final-options/create/", views.FinalOptionCreateAPI.as_view(), name='final_option_create'),
+    # Задачи и Контент
+    path("api/task/all/", views.TaskCRUD.as_view()),
+    path("api/task/create/", views.TaskCRUD.as_view()),
+    path("api/task/<int:pk>/update/", views.TaskCRUD.as_view()),
+    path("api/question/create/", views.QuestionCRUD.as_view()),
+    path("api/answer/create/", views.AnswerCRUD.as_view()),
 
-    # Попытки
-    path("api/submissions/submit/", views.SubmissionSubmitAPI.as_view(), name="submission_submit"),
-    path("api/submissions/history/", views.SubmissionHistoryAPI.as_view(), name="submission_history"),
+    # Студент: Обучение
+    path("api/tasks/education/random/", views.EducationTasksAPI.as_view()),
+    path("api/submissions/education/check/", views.EducationSubmitAPI.as_view()),
+
+    # Студент: Контроль
+    path("api/tasks/control/random/", views.ControlTaskAPI.as_view()),
+    path("api/submissions/control/submit/", views.ControlSubmitAPI.as_view()),
+
+    # Отчеты
+    path("api/admin/submissions/all/", views.AdminAllSubmissionsAPI.as_view()),
 
 
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),

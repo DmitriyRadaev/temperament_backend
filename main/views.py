@@ -2,6 +2,7 @@
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, permissions, response, decorators, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt import tokens, views as jwt_views, serializers as jwt_serializers, \
@@ -192,154 +193,222 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
         return StudentProfile.objects.filter(user=user)
 
 
-class DisciplineListAPI(APIView):
-    def get(self, request):
-        items = Discipline.objects.all()
-        return Response(DisciplineSerializer(items, many=True).data)
+class EvaluationMixin:
+    def _evaluate(self, task, data):
+        # 1. Расчет баллов за разметку
+        ref_all = task.reference_markup
+        ref_relevant = [r for r in ref_all if r['category_slug'] != 'useless']
+        stu_markup = data.get('answer_markup', [])
 
-class DisciplineCreateAPI(APIView):
+        matches = sum(1 for r in ref_relevant if any(
+            s['start'] == r['start'] and s['category_slug'] == r['category_slug']
+            for s in stu_markup
+        ))
+        score_markup = (matches / len(ref_relevant) * 100) if ref_relevant else 100
+
+        # 2. Оценка вопросов чат-бота + штрафы
+        score_questions = 100.0
+        if task.complexity.level in [3, 4]:
+            correct_q_query = task.questions.filter(is_correct=True)
+            correct_q_ids = set(correct_q_query.values_list('id', flat=True))
+            student_q_ids = set(data.get('selected_question_ids', []))
+
+            if correct_q_ids:
+                hits = len(correct_q_ids & student_q_ids)
+                misses = len(student_q_ids - correct_q_ids)
+                score_questions = max(0, (hits / len(correct_q_ids) * 100) - (misses * 20))
+            else:
+                score_questions = 100.0 if not student_q_ids else 0
+
+        # 3. Оценка финального ответа
+        correct_ans_obj = task.answers.filter(is_correct=True).first()
+        student_ans_obj = TaskAnswer.objects.filter(id=data.get('selected_answer_id')).first()
+        score_final = 100.0 if student_ans_obj and student_ans_obj.is_correct else 0.0
+
+        # Итог (40/30/30)
+        total = (score_markup * 0.4) + (score_questions * 0.3) + (score_final * 0.3)
+
+        # Подбор грейда
+        if total > 85:
+            grade = "Отлично"
+        elif total > 65:
+            grade = "Хорошо"
+        elif total > 40:
+            grade = "Удовлетворительно"
+        else:
+            grade = "Попробуйте еще раз"
+
+        # 4. Сборка характеристик (таблица сравнения)
+        markups = CategoryMarkup.objects.filter(task_category=task.category).select_related('color_markup')
+        styles = {m.slug: m.color_markup.style for m in markups}
+
+        consolidated_characteristics = []
+        stu_chars = data.get('student_characteristics', {})
+        for m in markups:
+            consolidated_characteristics.append({
+                "name": m.name,
+                "color": m.color_markup.style,
+                "studentCharacteristics": stu_chars.get(m.slug),
+                "correctCharacteristics": task.correct_characteristics.get(m.slug)
+            })
+
+        # Форматирование макапов
+        def format_markup(items):
+            return [{"start": x['start'], "end": x['end'], "style": styles.get(x['category_slug'], "bg-gray-100")} for x
+                    in items]
+
+        # Итоговый JSON-ответ
+        return {
+            "total_score": total,
+            "grade": grade,
+            "response": {
+                "grade": grade,
+                "spent_time": data.get("time_spent", "00:00"),
+                "text": task.text,
+                "studentAnswer": {
+                    "id": student_ans_obj.id if student_ans_obj else None,
+                    "text": student_ans_obj.text if student_ans_obj else "Нет ответа"
+                },
+                "correctAnswer": {
+                    "id": correct_ans_obj.id if correct_ans_obj else None,
+                    "text": correct_ans_obj.text if correct_ans_obj else "Не задан"
+                },
+                "studentMarkup": format_markup(stu_markup),
+                "correctMarkup": format_markup(ref_all),
+                # ДОБАВЛЕНО ПОЛЕ ANSWER
+                "studentQuestions": [
+                    {"id": q.id, "question": q.text, "answer": q.answer}
+                    for q in task.questions.filter(id__in=data.get('selected_question_ids', []))
+                ],
+                # ДОБАВЛЕНО ПОЛЕ ANSWER
+                "correctQuestions": [
+                    {"id": q.id, "question": q.text, "answer": q.answer}
+                    for q in task.questions.filter(is_correct=True)
+                ],
+                "characteristics": consolidated_characteristics
+            }
+        }
+
+
+# --- STUDENT FACING API ---
+
+
+# --- ГЕНЕРИЧЕСКИЙ КЛАСС ДЛЯ CRUD ---
+class BaseCRUDView(APIView):
+    model = None
+    serializer_class = None
+
+    def get(self, request, pk=None):
+        if pk:
+            obj = get_object_or_404(self.model, pk=pk)
+            return Response(self.serializer_class(obj).data)
+        objs = self.model.objects.all()
+        return Response(self.serializer_class(objs, many=True).data)
+
     def post(self, request):
-        serializer = DisciplineSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, 201)
+        return Response(serializer.errors, 400)
 
-class DisciplineDeleteAPI(APIView):
-    def delete(self, request, pk):
-        item = get_object_or_404(Discipline, pk=pk)
-        item.delete()
-        return Response({"status": "deleted"}, status=status.HTTP_204_NO_CONTENT)
-
-
-# --- КАТЕГОРИИ (Цвета) ---
-class CategoryListAPI(APIView):
-    def get(self, request):
-        items = Category.objects.all()
-        return Response(CategorySerializer(items, many=True).data)
-
-
-class CategoryCreateAPI(APIView):
-    def post(self, request):
-        serializer = CategorySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class CategoryDeleteAPI(APIView):
-    def delete(self, request, pk):
-        category = get_object_or_404(Category, pk=pk)
-        category.delete()
-        return Response({"message": "Category deleted"}, status=status.HTTP_204_NO_CONTENT)
-
-# --- ЗАДАЧИ ---
-class TaskListAPI(APIView):
-    def get(self, request):
-        tasks = Task.objects.all().order_by('-created_at')
-        return Response(TaskSerializer(tasks, many=True).data)
-
-
-class TaskDetailAPI(APIView):
-    def get(self, request, pk):
-        task = get_object_or_404(Task, pk=pk)
-        return Response(TaskSerializer(task).data)
-
-
-class TaskCreateAPI(APIView):
-    def post(self, request):
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class TaskUpdateAPI(APIView):
     def patch(self, request, pk):
-        task = get_object_or_404(Task, pk=pk)
-        serializer = TaskSerializer(task, data=request.data, partial=True)
+        obj = get_object_or_404(self.model, pk=pk)
+        serializer = self.serializer_class(obj, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, 400)
 
-
-class TaskDeleteAPI(APIView):
     def delete(self, request, pk):
-        task = get_object_or_404(Task, pk=pk)
-        task.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        obj = get_object_or_404(self.model, pk=pk)
+        obj.delete()
+        return Response(status=204)
 
 
-# --- ЗАБИТИЕ ВОПРОСОВ И ОПЦИЙ ---
-class QuestionCreateAPI(APIView):
+# --- РЕАЛИЗАЦИЯ CRUD ---
+class TaskCategoryCRUD(BaseCRUDView):
+    model = TaskCategory
+    serializer_class = TaskCategoryStudentSerializer
+
+
+class CategoryConfigCRUD(BaseCRUDView):
+    model = CategoryConfig
+    serializer_class = CategoryConfigCRUDSerializer
+
+
+class ComplexityCRUD(BaseCRUDView):
+    model = TaskComplexity
+    serializer_class = TaskComplexitySerializer
+
+
+class ColorsMarkupCRUD(BaseCRUDView):
+    model = ColorsMarkup
+    serializer_class = ColorsMarkupSerializer
+
+
+class CategoryMarkupCRUD(BaseCRUDView):
+    model = CategoryMarkup
+    serializer_class = CategoryMarkupSerializer
+
+
+class TaskCRUD(BaseCRUDView):
+    model = Task
+    serializer_class = TaskAdminSerializer
+
+
+class QuestionCRUD(BaseCRUDView):
+    model = TaskQuestion
+    serializer_class = TaskQuestionAdminSerializer
+
+
+class AnswerCRUD(BaseCRUDView):
+    model = TaskAnswer
+    serializer_class = TaskAnswerAdminSerializer
+
+
+
+# --- STUDENT API ---
+class EducationTasksAPI(APIView):
+    def get(self, request):
+        res = [TaskStudentSerializer(Task.objects.filter(complexity__level=lv).order_by('?').first()).data for lv in
+               [1, 2, 3, 4] if Task.objects.filter(complexity__level=lv).exists()]
+        return Response(res)
+
+
+class EducationSubmitAPI(APIView, EvaluationMixin):
     def post(self, request):
-        serializer = TaskQuestionSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        task = get_object_or_404(Task, id=request.data.get('task_id'))
+        res = self._evaluate(task, request.data)
+        return Response(res['response'])
 
 
-class FinalOptionCreateAPI(APIView):
-    def post(self, request):
-        serializer = TaskFinalOptionSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ControlTaskAPI(APIView):
+    def get(self, request):
+        t = Task.objects.filter(complexity__level__in=[3, 4]).order_by('?').first()
+        return Response(TaskStudentSerializer(t).data if t else {}, status=200 if t else 404)
 
 
-# --- ПРОВЕРКА РЕШЕНИЯ ---
-class SubmissionSubmitAPI(APIView):
+class ControlSubmitAPI(APIView, EvaluationMixin):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         data = request.data
-        task = get_object_or_404(Task, id=data.get('task'))
-
-        # 1. Баллы за разметку (Текст)
-        stu_markup = data.get('answer_markup', [])
-        ref_markup = task.reference_markup
-        matches = 0
-        for r in ref_markup:
-            for s in stu_markup:
-                if (s['start'] == r['start'] and s['end'] == r['end'] and s['category_slug'] == r['category_slug']):
-                    matches += 1
-                    break
-        score_markup = (matches / len(ref_markup) * 100) if ref_markup else 100
-
-        # 2. Баллы за чат-бота (Вопросы)
-        correct_q_ids = set(task.questions.filter(is_correct=True).values_list('id', flat=True))
-        student_q_ids = set(data.get('selected_question_ids', []))
-        if correct_q_ids:
-            q_matches = len(correct_q_ids & student_q_ids)
-            # Штрафуем за лишние неверные ответы
-            wrong_choices = len(student_q_ids - correct_q_ids)
-            score_questions = max(0, (q_matches / len(correct_q_ids) * 100) - (wrong_choices * 10))
-        else:
-            score_questions = 100 if not student_q_ids else 0
-
-        # 3. Баллы за финальный выбор
-        final_id = data.get('selected_final_option_id')
-        is_final_correct = task.final_options.filter(id=final_id, is_correct=True).exists()
-        score_final = 100.0 if is_final_correct else 0.0
-
-        # Итог
-        total_score = (score_markup + score_questions + score_final) / 3
-
-        serializer = SubmissionSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save(
-                score_markup=round(score_markup, 2),
-                score_questions=round(score_questions, 2),
-                score_final=round(score_final, 2),
-                total_score=round(total_score, 2)
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        task = get_object_or_404(Task, id=data.get('task_id'))
+        res = self._evaluate(task, data)
+        Submission.objects.create(
+            task=task, student=request.user, total_score=res['total_score'], grade=res['grade'],
+            spent_time=data.get('time_spent', "00:00"), answer_markup=data.get('answer_markup'),
+            student_characteristics=data.get('student_characteristics'),
+            selected_answer_id=data.get('selected_answer_id'),
+            selected_question_ids=data.get('selected_question_ids')
+        )
+        return Response(res['response'])
 
 
-class SubmissionHistoryAPI(APIView):
+class AdminAllSubmissionsAPI(APIView):
+    permission_classes = [IsAdminOrSuperAdmin]
+
     def get(self, request):
-        items = Submission.objects.all().order_by('-created_at')
-        return Response(SubmissionSerializer(items, many=True).data)
+        subs = Submission.objects.all().select_related('student', 'task').order_by('-created_at')
+        return Response(SubmissionAdminSerializer(subs, many=True).data)

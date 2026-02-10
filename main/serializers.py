@@ -1,8 +1,6 @@
 from rest_framework import serializers, generics
 from django.contrib.auth import get_user_model
-from .models import (
-    StudentProfile, Category, Task, Submission, TaskQuestion, TaskFinalOption, Discipline
-)
+from .models import *
 
 
 Account = get_user_model()
@@ -103,44 +101,89 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         model = StudentProfile
         fields = ("id", "user", "group")
 
-class DisciplineSerializer(serializers.ModelSerializer):
+
+
+# Сериализаторы системы
+
+
+# --- ADMIN SERIALIZERS (Для CRUD) ---
+class TaskCategoryCRUDSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Discipline
+        model = TaskCategory
         fields = '__all__'
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategoryConfigCRUDSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Category
+        model = CategoryConfig
         fields = '__all__'
 
-class TaskQuestionSerializer(serializers.ModelSerializer):
+class TaskComplexitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskComplexity
+        fields = '__all__'
+
+class ColorsMarkupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ColorsMarkup
+        fields = '__all__'
+
+class CategoryMarkupSerializer(serializers.ModelSerializer):
+    style = serializers.CharField(source='color_markup.style', read_only=True)
+    class Meta:
+        model = CategoryMarkup
+        fields = ['id', 'name', 'slug', 'color_markup', 'task_category', 'style']
+
+class TaskQuestionAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskQuestion
-        fields = ['id', 'text', 'is_correct']
+        fields = '__all__'
 
-class TaskFinalOptionSerializer(serializers.ModelSerializer):
+class TaskAnswerAdminSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TaskFinalOption
-        fields = ['id', 'text', 'is_correct']
+        model = TaskAnswer
+        fields = '__all__'
 
-class TaskSerializer(serializers.ModelSerializer):
-    questions = TaskQuestionSerializer(many=True, read_only=True)
-    final_options = TaskFinalOptionSerializer(many=True, read_only=True)
-
+class TaskAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
 
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        for q in ret.get('questions', []):
-            q.pop('is_correct', None)
-        for o in ret.get('final_options', []):
-            o.pop('is_correct', None)
-        return ret
+# --- STUDENT SERIALIZERS (Для выдачи задач) ---
+class TaskCategoryStudentSerializer(serializers.ModelSerializer):
+    class ConfigSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = CategoryConfig
+            fields = ['button_title', 'short_description', 'detail_description']
+    config = ConfigSerializer(read_only=True)
+    class Meta:
+        model = TaskCategory
+        fields = ['id', 'name', 'slug', 'config']
 
-class SubmissionSerializer(serializers.ModelSerializer):
+class TaskStudentSerializer(serializers.ModelSerializer):
+    characteristics = serializers.SerializerMethodField()
+    correctQuestions = serializers.SerializerMethodField() # Пул вопросов для чат-бота
+    answerOptions = serializers.SerializerMethodField()
+    complexity_level = serializers.IntegerField(source='complexity.level', read_only=True)
+
+    class Meta:
+        model = Task
+        fields = ['id', 'text', 'condition', 'complexity_level', 'characteristics', 'correctQuestions', 'answerOptions']
+
+    def get_characteristics(self, obj):
+        markups = CategoryMarkup.objects.filter(task_category=obj.category).select_related('color_markup')
+        return [{"id": m.slug, "name": m.name, "color": m.color_markup.style} for m in markups]
+
+    def get_correctQuestions(self, obj):
+        return [{"id": q.id, "text": q.text, "answer": q.answer} for q in obj.questions.all()]
+
+    def get_answerOptions(self, obj):
+        return [{"id": a.id, "text": a.text} for a in obj.answers.all()]
+
+class SubmissionAdminSerializer(serializers.ModelSerializer):
+    student_fio = serializers.SerializerMethodField()
+    task_title = serializers.CharField(source='task.text', read_only=True)
     class Meta:
         model = Submission
-        fields = '__all__'
-        read_only_fields = ['score_markup', 'score_questions', 'score_final', 'total_score']
+        fields = ['id', 'student_fio', 'task_title', 'total_score', 'grade', 'spent_time', 'created_at']
+    def get_student_fio(self, obj):
+        return f"{obj.student.surname} {obj.student.name} ({obj.student.group})"

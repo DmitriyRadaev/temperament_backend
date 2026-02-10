@@ -1,6 +1,6 @@
 from rest_framework import permissions
 from django.contrib.auth import get_user_model
-
+from rest_framework import permissions
 Account = get_user_model()
 
 
@@ -24,7 +24,7 @@ class IsAdminOrSuperAdmin(permissions.BasePermission):
         )
 
 
-from rest_framework import permissions
+
 # Доступ администраторам или просмотр аутентифицированным
 class IsAdminOrAuthenticatedReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
