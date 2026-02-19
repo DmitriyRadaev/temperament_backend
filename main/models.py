@@ -183,15 +183,19 @@ class TaskAnswer(models.Model):
     text = models.CharField(max_length=255)
     is_correct = models.BooleanField(default=False)
 
+
 class Submission(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="submissions")
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    answer_markup = models.JSONField(default=list)
     start_time = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now=True)
+    spent_time = models.CharField(max_length=10, null=True)
+    answer_markup = models.JSONField(default=list)
     selected_question_ids = models.JSONField(default=list)
     student_characteristics = models.JSONField(default=dict)
     selected_answer_id = models.IntegerField(null=True)
     total_score = models.FloatField(default=0.0)
-    grade = models.CharField(max_length=50,null=True)
-    spent_time = models.CharField(max_length=10, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    grade = models.CharField(max_length=50, null=True)
+
+    class Meta:
+        ordering = ['created_at']

@@ -180,31 +180,54 @@ class TaskStudentSerializer(serializers.ModelSerializer):
         return [{"id": a.id, "text": a.text} for a in obj.answers.all()]
 
 
-class SubmissionAdminSerializer(serializers.ModelSerializer):
+class StudentStatementSerializer(serializers.ModelSerializer):
     student_fio = serializers.SerializerMethodField()
     group = serializers.SerializerMethodField()
-    start_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-    end_time = serializers.DateTimeField(source='created_at', format="%Y-%m-%d %H:%M:%S")
-    attempt_number = serializers.SerializerMethodField()
+
+    # Данные ПОСЛЕДНЕЙ попытки
+    last_start = serializers.SerializerMethodField()
+    last_end = serializers.SerializerMethodField()
+    last_spent = serializers.SerializerMethodField()
+    last_grade = serializers.SerializerMethodField()
+
+    # Список попыток (для клика по цифрам 1, 2, 3)
+    attempts = serializers.SerializerMethodField()
 
     class Meta:
-        model = Submission
+        model = Account  # Модель пользователя
         fields = [
-            'id', 'student_fio', 'group', 'start_time', 'end_time',
-            'spent_time', 'attempt_number', 'grade'
+            'student_fio', 'group',
+            'last_start', 'last_end', 'last_spent', 'last_grade',
+            'attempts'
         ]
 
     def get_student_fio(self, obj):
-        return f"{obj.student.surname} {obj.student.name}"
+        return f"{obj.surname} {obj.name}"
 
     def get_group(self, obj):
-        if hasattr(obj.student, 'student_profile'):
-            return obj.student.student_profile.group
-        return "N/A"
+        return obj.student_profile.group if hasattr(obj, 'student_profile') else "N/A"
 
-    def get_attempt_number(self, obj):
-        # Вычисляем порядковый номер попытки для конкретного студента
-        return Submission.objects.filter(
-            student=obj.student,
-            created_at__lte=obj.created_at
-        ).count()
+    def _get_sorted_attempts(self, obj):
+        return obj.submission_set.all().order_by('created_at')
+
+    def get_last_start(self, obj):
+        last = self._get_sorted_attempts(obj).last()
+        return last.start_time.strftime("%H:%M:%S %d.%m.%Y") if last and last.start_time else "—"
+
+    def get_last_end(self, obj):
+        last = self._get_sorted_attempts(obj).last()
+        return last.created_at.strftime("%H:%M:%S %d.%m.%Y") if last else "—"
+
+    def get_last_spent(self, obj):
+        last = self._get_sorted_attempts(obj).last()
+        return last.spent_time if last else "—"
+
+    def get_last_grade(self, obj):
+        last = self._get_sorted_attempts(obj).last()
+        return last.grade if last else "—"
+
+    def get_attempts(self, obj):
+        return [
+            {"number": i + 1, "id": att.id}
+            for i, att in enumerate(self._get_sorted_attempts(obj))
+        ]

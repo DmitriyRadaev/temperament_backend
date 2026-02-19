@@ -394,25 +394,31 @@ class ControlSubmitAPI(APIView, EvaluationMixin):
 
     def post(self, request):
         data = request.data
-        task_id = data.get('task_id')
-        if not task_id:
-            return Response({"error": "task_id is required"}, status=400)
-
-        task = get_object_or_404(Task, id=task_id)
+        task = get_object_or_404(Task, id=data.get('task_id'))
         res = self._evaluate(task, data)
 
-        Submission.objects.create(
-            task=task,
-            student=request.user,
-            start_time=data.get('start_time'),
-            total_score=res['total_score'],
-            grade=res['grade'],
-            spent_time=str(data.get('time_spent', "00:00")),
-            answer_markup=data.get('answer_markup', []),
-            selected_question_ids=data.get('selected_question_ids', []),
-            student_characteristics=data.get('student_characteristics', {}),
-            selected_answer_id=data.get('selected_answer_id')
-        )
+        attempts = Submission.objects.filter(student=request.user).order_by('created_at')
+        count = attempts.count()
+
+        submission_data = {
+            "task": task,
+            "total_score": res['total_score'],
+            "grade": res['grade'],
+            "spent_time": str(data.get('time_spent', "00:00")),
+            "start_time": data.get('start_time'),
+            "answer_markup": data.get('answer_markup', []),
+            "selected_question_ids": data.get('selected_question_ids', []),
+            "student_characteristics": data.get('student_characteristics', {}),
+            "selected_answer_id": data.get('selected_answer_id')
+        }
+
+        if count >= 3:
+            obj = attempts.first()
+            for key, value in submission_data.items():
+                setattr(obj, key, value)
+            obj.save()
+        else:
+            Submission.objects.create(student=request.user, **submission_data)
 
         return Response(res['response'])
 
@@ -420,8 +426,9 @@ class AdminAllSubmissionsAPI(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
 
     def get(self, request):
-        subs = Submission.objects.all().select_related('student', 'task').order_by('-created_at')
-        return Response(SubmissionAdminSerializer(subs, many=True).data)
+        students = Account.objects.filter(submission__isnull=False).distinct()
+        serializer = StudentStatementSerializer(students, many=True)
+        return Response(serializer.data)
 
 
 class AdminSubmissionDetailAPI(APIView, EvaluationMixin):
