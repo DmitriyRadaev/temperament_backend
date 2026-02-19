@@ -49,6 +49,7 @@ urlpatterns = [
 
     # Отчеты
     path("api/admin/submissions/all/", views.AdminAllSubmissionsAPI.as_view()),
+    path("api/admin/submissions/<int:pk>/", views.AdminSubmissionDetailAPI.as_view()),
 
 
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),

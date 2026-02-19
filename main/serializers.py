@@ -182,36 +182,29 @@ class TaskStudentSerializer(serializers.ModelSerializer):
 
 class SubmissionAdminSerializer(serializers.ModelSerializer):
     student_fio = serializers.SerializerMethodField()
-    task_title = serializers.SerializerMethodField()
+    group = serializers.SerializerMethodField()
+    start_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    end_time = serializers.DateTimeField(source='created_at', format="%Y-%m-%d %H:%M:%S")
+    attempt_number = serializers.SerializerMethodField()
 
     class Meta:
         model = Submission
         fields = [
-            'id',
-            'student_fio',
-            'task_title',
-            'total_score',
-            'grade',
-            'spent_time',
-            'created_at'
+            'id', 'student_fio', 'group', 'start_time', 'end_time',
+            'spent_time', 'attempt_number', 'grade'
         ]
 
     def get_student_fio(self, obj):
-        # 1. Безопасно получаем данные пользователя
-        user = obj.student
-        surname = getattr(user, 'surname', '')
-        name = getattr(user, 'name', '')
+        return f"{obj.student.surname} {obj.student.name}"
 
-        # 2. Безопасно получаем группу из профиля
-        group = "Нет группы"
-        # Проверяем связь OneToOne
-        if hasattr(user, 'student_profile'):
-            group = user.student_profile.group
+    def get_group(self, obj):
+        if hasattr(obj.student, 'student_profile'):
+            return obj.student.student_profile.group
+        return "N/A"
 
-        return f"{surname} {name} ({group})".strip()
-
-    def get_task_title(self, obj):
-        # Если задача существует - берем текст, если нет - пишем заглушку
-        if obj.task:
-            return obj.task.text[:50] + "..."
-        return "Задача не найдена или удалена"
+    def get_attempt_number(self, obj):
+        # Вычисляем порядковый номер попытки для конкретного студента
+        return Submission.objects.filter(
+            student=obj.student,
+            created_at__lte=obj.created_at
+        ).count()

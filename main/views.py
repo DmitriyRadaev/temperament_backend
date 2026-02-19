@@ -422,3 +422,22 @@ class AdminAllSubmissionsAPI(APIView):
     def get(self, request):
         subs = Submission.objects.all().select_related('student', 'task').order_by('-created_at')
         return Response(SubmissionAdminSerializer(subs, many=True).data)
+
+
+class AdminSubmissionDetailAPI(APIView, EvaluationMixin):
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def get(self, request, pk):
+        submission = get_object_or_404(Submission, pk=pk)
+        task = submission.task
+
+        data_to_compare = {
+            "answer_markup": submission.answer_markup,
+            "selected_question_ids": submission.selected_question_ids,
+            "selected_answer_id": submission.selected_answer_id,
+            "student_characteristics": submission.student_characteristics,
+            "time_spent": submission.spent_time
+        }
+
+        evaluation_data = self._evaluate(task, data_to_compare)
+        return Response(evaluation_data['response'])
