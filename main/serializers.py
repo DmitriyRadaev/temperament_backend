@@ -179,11 +179,39 @@ class TaskStudentSerializer(serializers.ModelSerializer):
     def get_answerOptions(self, obj):
         return [{"id": a.id, "text": a.text} for a in obj.answers.all()]
 
+
 class SubmissionAdminSerializer(serializers.ModelSerializer):
     student_fio = serializers.SerializerMethodField()
-    task_title = serializers.CharField(source='task.text', read_only=True)
+    task_title = serializers.SerializerMethodField()
+
     class Meta:
         model = Submission
-        fields = ['id', 'student_fio', 'task_title', 'total_score', 'grade', 'spent_time', 'created_at']
+        fields = [
+            'id',
+            'student_fio',
+            'task_title',
+            'total_score',
+            'grade',
+            'spent_time',
+            'created_at'
+        ]
+
     def get_student_fio(self, obj):
-        return f"{obj.student.surname} {obj.student.name} ({obj.student.group})"
+        # 1. Безопасно получаем данные пользователя
+        user = obj.student
+        surname = getattr(user, 'surname', '')
+        name = getattr(user, 'name', '')
+
+        # 2. Безопасно получаем группу из профиля
+        group = "Нет группы"
+        # Проверяем связь OneToOne
+        if hasattr(user, 'student_profile'):
+            group = user.student_profile.group
+
+        return f"{surname} {name} ({group})".strip()
+
+    def get_task_title(self, obj):
+        # Если задача существует - берем текст, если нет - пишем заглушку
+        if obj.task:
+            return obj.task.text[:50] + "..."
+        return "Задача не найдена или удалена"

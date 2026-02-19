@@ -394,17 +394,27 @@ class ControlSubmitAPI(APIView, EvaluationMixin):
 
     def post(self, request):
         data = request.data
-        task = get_object_or_404(Task, id=data.get('task_id'))
-        res = self._evaluate(task, data)
-        Submission.objects.create(
-            task=task, student=request.user, total_score=res['total_score'], grade=res['grade'],
-            spent_time=data.get('time_spent', "00:00"), answer_markup=data.get('answer_markup'),
-            student_characteristics=data.get('student_characteristics'),
-            selected_answer_id=data.get('selected_answer_id'),
-            selected_question_ids=data.get('selected_question_ids')
-        )
-        return Response(res['response'])
+        task_id = data.get('task_id')
+        if not task_id:
+            return Response({"error": "task_id is required"}, status=400)
 
+        task = get_object_or_404(Task, id=task_id)
+        res = self._evaluate(task, data)
+
+        Submission.objects.create(
+            task=task,
+            student=request.user,
+            start_time=data.get('start_time'),
+            total_score=res['total_score'],
+            grade=res['grade'],
+            spent_time=str(data.get('time_spent', "00:00")),
+            answer_markup=data.get('answer_markup', []),
+            selected_question_ids=data.get('selected_question_ids', []),
+            student_characteristics=data.get('student_characteristics', {}),
+            selected_answer_id=data.get('selected_answer_id')
+        )
+
+        return Response(res['response'])
 
 class AdminAllSubmissionsAPI(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
