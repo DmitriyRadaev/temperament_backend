@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'main',
+    'drf_spectacular',
     'django_cleanup.apps.CleanupConfig'
 ]
 
@@ -146,7 +147,18 @@ REST_FRAMEWORK = {
         'main.authenticate.CustomAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "EXCEPTION_HANDLER": "main.views.custom_exception_handler"
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Task System API',
+    'DESCRIPTION': 'API для управления задачами и студентами',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': True,
+    'SERVE_URL': 'http://localhost:8000', # Укажите ваш base URL
+}
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
@@ -187,3 +199,4 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_PATH': '/',
     'AUTH_COOKIE_SAMESITE': "Lax",
 }
+

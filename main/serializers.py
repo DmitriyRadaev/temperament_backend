@@ -20,7 +20,6 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        # Явно перечисляем новые поля
         fields = ("email", "name", "surname", "patronymic", "password", "password2", "group")
 
     def validate(self, attrs):
@@ -58,7 +57,6 @@ class AdminRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop("password2")
-        # Передаем данные в create_admin
         user = Account.objects.create_admin(
             email=validated_data["email"],
             name=validated_data["name"],
@@ -102,66 +100,82 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "group")
 
 
+# Создание задачек и покраса
 
-# Сериализаторы системы
-
-
-# --- ADMIN SERIALIZERS (Для CRUD) ---
 class TaskCategoryCRUDSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskCategory
         fields = '__all__'
+
 
 class CategoryConfigCRUDSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryConfig
         fields = '__all__'
 
+
 class TaskComplexitySerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskComplexity
         fields = '__all__'
+
 
 class ColorsMarkupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ColorsMarkup
         fields = '__all__'
 
+
 class CategoryMarkupSerializer(serializers.ModelSerializer):
     style = serializers.CharField(source='color_markup.style', read_only=True)
+
     class Meta:
         model = CategoryMarkup
         fields = ['id', 'name', 'slug', 'color_markup', 'task_category', 'style']
+
 
 class TaskQuestionAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskQuestion
         fields = '__all__'
 
+
 class TaskAnswerAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskAnswer
         fields = '__all__'
+
 
 class TaskAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
 
-# --- STUDENT SERIALIZERS (Для выдачи задач) ---
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Submission
+        fields = '__all__'
+
+
+# Задачи и попытки
+
 class TaskCategoryStudentSerializer(serializers.ModelSerializer):
     class ConfigSerializer(serializers.ModelSerializer):
         class Meta:
             model = CategoryConfig
             fields = ['button_title', 'short_description', 'detail_description']
+
     config = ConfigSerializer(read_only=True)
+
     class Meta:
         model = TaskCategory
         fields = ['id', 'name', 'slug', 'config']
 
+
 class TaskStudentSerializer(serializers.ModelSerializer):
     characteristics = serializers.SerializerMethodField()
-    correctQuestions = serializers.SerializerMethodField() # Пул вопросов для чат-бота
+    correctQuestions = serializers.SerializerMethodField()
     answerOptions = serializers.SerializerMethodField()
     complexity_level = serializers.IntegerField(source='complexity.level', read_only=True)
 
@@ -184,17 +198,15 @@ class StudentStatementSerializer(serializers.ModelSerializer):
     student_fio = serializers.SerializerMethodField()
     group = serializers.SerializerMethodField()
 
-    # Данные ПОСЛЕДНЕЙ попытки
     last_start = serializers.SerializerMethodField()
     last_end = serializers.SerializerMethodField()
     last_spent = serializers.SerializerMethodField()
     last_grade = serializers.SerializerMethodField()
 
-    # Список попыток (для клика по цифрам 1, 2, 3)
     attempts = serializers.SerializerMethodField()
 
     class Meta:
-        model = Account  # Модель пользователя
+        model = Account
         fields = [
             'student_fio', 'group',
             'last_start', 'last_end', 'last_spent', 'last_grade',
