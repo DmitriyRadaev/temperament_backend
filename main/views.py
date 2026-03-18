@@ -1,16 +1,16 @@
-# views.py
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, permissions, response, decorators, status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt import tokens, views as jwt_views, serializers as jwt_serializers, \
-    exceptions as jwt_exceptions
+from rest_framework_simplejwt import tokens, views as jwt_views, serializers as jwt_serializers, exceptions as jwt_exceptions
 from django.contrib.auth import authenticate
 from django.conf import settings
 from django.middleware import csrf
 from rest_framework import exceptions as rest_exceptions
+from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
+from rest_framework import serializers as s
 
 from .models import *
 from .permissions import IsSuperAdmin, IsAdminOrSuperAdmin
@@ -19,14 +19,11 @@ from .serializers import *
 Account = get_user_model()
 
 
-
 def custom_exception_handler(exc, context):
     from rest_framework.views import exception_handler
     drf_response = exception_handler(exc, context)
-
     if drf_response is None:
         return None
-
     data = drf_response.data
     if isinstance(data, dict):
         message = data.get("detail") or next(iter(data.values()), "Ошибка")
@@ -37,12 +34,9 @@ def custom_exception_handler(exc, context):
         message = str(data[0]) if data else "Ошибка"
     else:
         message = str(data)
-
     drf_response.data = {"ok": False, "error": message}
     return drf_response
 
-
-# ОБЁРТКИ ОТВЕТОВ
 
 def ok(data=None, status_code=status.HTTP_200_OK):
     return Response({"ok": True, "data": data}, status=status_code)
@@ -64,13 +58,44 @@ def _serializer_hint(errors: dict) -> str:
     return " | ".join(hints)
 
 
-# AUTH
+# вспомогательные inline-схемы для swagger
+def _ok_response(serializer_class, many=False):
+    """Оборачивает сериализатор в {"ok": true, "data": ...} для swagger."""
+    data_field = serializer_class(many=many) if many else serializer_class()
+    return inline_serializer(
+        name=f"Ok{serializer_class.__name__}{'List' if many else ''}",
+        fields={"ok": s.BooleanField(), "data": data_field}
+    )
+
+def _err_response():
+    return inline_serializer(
+        name="ErrorResponse",
+        fields={"ok": s.BooleanField(), "error": s.CharField()}
+    )
+
+def _deleted_response():
+    return inline_serializer(
+        name="DeletedResponse",
+        fields={"ok": s.BooleanField(), "data": inline_serializer(name="DeletedData", fields={"detail": s.CharField()})}
+    )
+
 
 def get_user_tokens(user):
     refresh = tokens.RefreshToken.for_user(user)
     return {"refresh_token": str(refresh), "access_token": str(refresh.access_token)}
 
 
+# AUTH
+
+@extend_schema(
+    tags=["Auth"],
+    request=inline_serializer("LoginRequest", fields={"email": s.EmailField(), "password": s.CharField()}),
+    responses={
+        200: inline_serializer("LoginResponse", fields={"ok": s.BooleanField(), "data": inline_serializer("LoginData", fields={"detail": s.CharField()})}),
+        400: _err_response(),
+        401: _err_response(),
+    }
+)
 @decorators.api_view(["POST"])
 @decorators.permission_classes([])
 def loginView(request):
@@ -78,11 +103,9 @@ def loginView(request):
     password = request.data.get("password")
     if not email or not password:
         return err("Email и пароль обязательны", status_code=status.HTTP_400_BAD_REQUEST)
-
     user = authenticate(email=email, password=password)
     if not user:
         return err("Неверный email или пароль", status_code=status.HTTP_401_UNAUTHORIZED)
-
     tokens_dict = get_user_tokens(user)
     res = Response({"ok": True, "data": {"detail": "Вход выполнен успешно"}})
     res.set_cookie(key=settings.SIMPLE_JWT['AUTH_COOKIE'], value=tokens_dict["access_token"],
@@ -103,6 +126,11 @@ def loginView(request):
     return res
 
 
+@extend_schema(
+    tags=["Auth"],
+    request=None,
+    responses={200: inline_serializer("LogoutResponse", fields={"ok": s.BooleanField(), "data": inline_serializer("LogoutData", fields={"detail": s.CharField()})})}
+)
 @csrf_exempt
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
@@ -113,7 +141,6 @@ def logoutView(request):
             tokens.RefreshToken(refresh_token).blacklist()
     except Exception:
         pass
-
     res = Response({"ok": True, "data": {"detail": "Выход выполнен успешно"}}, status=status.HTTP_200_OK)
     res.delete_cookie(key=settings.SIMPLE_JWT['AUTH_COOKIE'], path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'), samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'))
     res.delete_cookie(key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'], path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'), samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'))
@@ -134,6 +161,7 @@ class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         raise jwt_exceptions.InvalidToken("No valid refresh token in cookie")
 
 
+@extend_schema(tags=["Auth"])
 class CookieTokenRefreshView(jwt_views.TokenRefreshView):
     serializer_class = CookieTokenRefreshSerializer
 
@@ -154,6 +182,7 @@ class CookieTokenRefreshView(jwt_views.TokenRefreshView):
         return super().finalize_response(request, response_obj, *args, **kwargs)
 
 
+@extend_schema(tags=["Auth"], request=StudentRegistrationSerializer, responses={201: _ok_response(StudentRegistrationSerializer), 400: _err_response()})
 class StudentRegisterView(generics.CreateAPIView):
     serializer_class = StudentRegistrationSerializer
     permission_classes = [permissions.AllowAny]
@@ -166,6 +195,7 @@ class StudentRegisterView(generics.CreateAPIView):
         return err("Ошибка регистрации", _serializer_hint(serializer.errors))
 
 
+@extend_schema(tags=["Auth"], request=AdminRegistrationSerializer, responses={201: _ok_response(AdminRegistrationSerializer), 400: _err_response()})
 class AdminRegisterView(generics.CreateAPIView):
     serializer_class = AdminRegistrationSerializer
     permission_classes = [IsSuperAdmin]
@@ -178,6 +208,7 @@ class AdminRegisterView(generics.CreateAPIView):
         return err("Ошибка регистрации администратора", _serializer_hint(serializer.errors))
 
 
+@extend_schema(tags=["Auth"], request=SuperAdminRegistrationSerializer, responses={201: _ok_response(SuperAdminRegistrationSerializer), 400: _err_response()})
 class SuperAdminRegisterView(generics.CreateAPIView):
     serializer_class = SuperAdminRegistrationSerializer
     permission_classes = [IsSuperAdmin]
@@ -192,11 +223,15 @@ class SuperAdminRegisterView(generics.CreateAPIView):
 
 # TaskCategory
 
+@extend_schema(tags=["TaskCategory"])
 class TaskCategoryListView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskCategoryCRUDSerializer, many=True)})
     def get(self, request):
         return ok(TaskCategoryCRUDSerializer(TaskCategory.objects.all(), many=True).data)
 
+@extend_schema(tags=["TaskCategory"])
 class TaskCategoryCreateView(APIView):
+    @extend_schema(request=TaskCategoryCRUDSerializer, responses={201: _ok_response(TaskCategoryCRUDSerializer), 400: _err_response()})
     def post(self, request):
         serializer = TaskCategoryCRUDSerializer(data=request.data)
         if serializer.is_valid():
@@ -204,11 +239,15 @@ class TaskCategoryCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["TaskCategory"])
 class TaskCategoryRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskCategoryCRUDSerializer)})
     def get(self, request, pk):
         return ok(TaskCategoryCRUDSerializer(get_object_or_404(TaskCategory, pk=pk)).data)
 
+@extend_schema(tags=["TaskCategory"])
 class TaskCategoryUpdateView(APIView):
+    @extend_schema(request=TaskCategoryCRUDSerializer, responses={200: _ok_response(TaskCategoryCRUDSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = TaskCategoryCRUDSerializer(get_object_or_404(TaskCategory, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -216,6 +255,7 @@ class TaskCategoryUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=TaskCategoryCRUDSerializer, responses={200: _ok_response(TaskCategoryCRUDSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = TaskCategoryCRUDSerializer(get_object_or_404(TaskCategory, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -223,18 +263,25 @@ class TaskCategoryUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["TaskCategory"])
 class TaskCategoryDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(TaskCategory, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
 
 
 # CategoryConfig
+
+@extend_schema(tags=["CategoryConfig"])
 class CategoryConfigListView(APIView):
+    @extend_schema(responses={200: _ok_response(CategoryConfigCRUDSerializer, many=True)})
     def get(self, request):
         return ok(CategoryConfigCRUDSerializer(CategoryConfig.objects.all(), many=True).data)
 
+@extend_schema(tags=["CategoryConfig"])
 class CategoryConfigCreateView(APIView):
+    @extend_schema(request=CategoryConfigCRUDSerializer, responses={201: _ok_response(CategoryConfigCRUDSerializer), 400: _err_response()})
     def post(self, request):
         serializer = CategoryConfigCRUDSerializer(data=request.data)
         if serializer.is_valid():
@@ -242,11 +289,15 @@ class CategoryConfigCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["CategoryConfig"])
 class CategoryConfigRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(CategoryConfigCRUDSerializer)})
     def get(self, request, pk):
         return ok(CategoryConfigCRUDSerializer(get_object_or_404(CategoryConfig, pk=pk)).data)
 
+@extend_schema(tags=["CategoryConfig"])
 class CategoryConfigUpdateView(APIView):
+    @extend_schema(request=CategoryConfigCRUDSerializer, responses={200: _ok_response(CategoryConfigCRUDSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = CategoryConfigCRUDSerializer(get_object_or_404(CategoryConfig, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -254,6 +305,7 @@ class CategoryConfigUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=CategoryConfigCRUDSerializer, responses={200: _ok_response(CategoryConfigCRUDSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = CategoryConfigCRUDSerializer(get_object_or_404(CategoryConfig, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -261,7 +313,9 @@ class CategoryConfigUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["CategoryConfig"])
 class CategoryConfigDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(CategoryConfig, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
@@ -269,11 +323,15 @@ class CategoryConfigDestroyView(APIView):
 
 # TaskComplexity
 
+@extend_schema(tags=["Complexity"])
 class ComplexityListView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskComplexitySerializer, many=True)})
     def get(self, request):
         return ok(TaskComplexitySerializer(TaskComplexity.objects.all(), many=True).data)
 
+@extend_schema(tags=["Complexity"])
 class ComplexityCreateView(APIView):
+    @extend_schema(request=TaskComplexitySerializer, responses={201: _ok_response(TaskComplexitySerializer), 400: _err_response()})
     def post(self, request):
         serializer = TaskComplexitySerializer(data=request.data)
         if serializer.is_valid():
@@ -281,11 +339,15 @@ class ComplexityCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Complexity"])
 class ComplexityRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskComplexitySerializer)})
     def get(self, request, pk):
         return ok(TaskComplexitySerializer(get_object_or_404(TaskComplexity, pk=pk)).data)
 
+@extend_schema(tags=["Complexity"])
 class ComplexityUpdateView(APIView):
+    @extend_schema(request=TaskComplexitySerializer, responses={200: _ok_response(TaskComplexitySerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = TaskComplexitySerializer(get_object_or_404(TaskComplexity, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -293,6 +355,7 @@ class ComplexityUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=TaskComplexitySerializer, responses={200: _ok_response(TaskComplexitySerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = TaskComplexitySerializer(get_object_or_404(TaskComplexity, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -300,7 +363,9 @@ class ComplexityUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Complexity"])
 class ComplexityDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(TaskComplexity, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
@@ -308,11 +373,15 @@ class ComplexityDestroyView(APIView):
 
 # ColorsMarkup
 
+@extend_schema(tags=["Colors"])
 class ColorsMarkupListView(APIView):
+    @extend_schema(responses={200: _ok_response(ColorsMarkupSerializer, many=True)})
     def get(self, request):
         return ok(ColorsMarkupSerializer(ColorsMarkup.objects.all(), many=True).data)
 
+@extend_schema(tags=["Colors"])
 class ColorsMarkupCreateView(APIView):
+    @extend_schema(request=ColorsMarkupSerializer, responses={201: _ok_response(ColorsMarkupSerializer), 400: _err_response()})
     def post(self, request):
         serializer = ColorsMarkupSerializer(data=request.data)
         if serializer.is_valid():
@@ -320,11 +389,15 @@ class ColorsMarkupCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Colors"])
 class ColorsMarkupRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(ColorsMarkupSerializer)})
     def get(self, request, pk):
         return ok(ColorsMarkupSerializer(get_object_or_404(ColorsMarkup, pk=pk)).data)
 
+@extend_schema(tags=["Colors"])
 class ColorsMarkupUpdateView(APIView):
+    @extend_schema(request=ColorsMarkupSerializer, responses={200: _ok_response(ColorsMarkupSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = ColorsMarkupSerializer(get_object_or_404(ColorsMarkup, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -332,6 +405,7 @@ class ColorsMarkupUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=ColorsMarkupSerializer, responses={200: _ok_response(ColorsMarkupSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = ColorsMarkupSerializer(get_object_or_404(ColorsMarkup, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -339,7 +413,9 @@ class ColorsMarkupUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Colors"])
 class ColorsMarkupDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(ColorsMarkup, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
@@ -347,11 +423,15 @@ class ColorsMarkupDestroyView(APIView):
 
 # CategoryMarkup
 
+@extend_schema(tags=["Markup"])
 class CategoryMarkupListView(APIView):
+    @extend_schema(responses={200: _ok_response(CategoryMarkupSerializer, many=True)})
     def get(self, request):
         return ok(CategoryMarkupSerializer(CategoryMarkup.objects.all(), many=True).data)
 
+@extend_schema(tags=["Markup"])
 class CategoryMarkupCreateView(APIView):
+    @extend_schema(request=CategoryMarkupSerializer, responses={201: _ok_response(CategoryMarkupSerializer), 400: _err_response()})
     def post(self, request):
         serializer = CategoryMarkupSerializer(data=request.data)
         if serializer.is_valid():
@@ -359,11 +439,15 @@ class CategoryMarkupCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Markup"])
 class CategoryMarkupRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(CategoryMarkupSerializer)})
     def get(self, request, pk):
         return ok(CategoryMarkupSerializer(get_object_or_404(CategoryMarkup, pk=pk)).data)
 
+@extend_schema(tags=["Markup"])
 class CategoryMarkupUpdateView(APIView):
+    @extend_schema(request=CategoryMarkupSerializer, responses={200: _ok_response(CategoryMarkupSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = CategoryMarkupSerializer(get_object_or_404(CategoryMarkup, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -371,6 +455,7 @@ class CategoryMarkupUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=CategoryMarkupSerializer, responses={200: _ok_response(CategoryMarkupSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = CategoryMarkupSerializer(get_object_or_404(CategoryMarkup, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -378,7 +463,9 @@ class CategoryMarkupUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Markup"])
 class CategoryMarkupDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(CategoryMarkup, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
@@ -386,11 +473,15 @@ class CategoryMarkupDestroyView(APIView):
 
 # Task
 
+@extend_schema(tags=["Task"])
 class TaskListView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskAdminSerializer, many=True)})
     def get(self, request):
         return ok(TaskAdminSerializer(Task.objects.all(), many=True).data)
 
+@extend_schema(tags=["Task"])
 class TaskCreateView(APIView):
+    @extend_schema(request=TaskAdminSerializer, responses={201: _ok_response(TaskAdminSerializer), 400: _err_response()})
     def post(self, request):
         serializer = TaskAdminSerializer(data=request.data)
         if serializer.is_valid():
@@ -398,11 +489,15 @@ class TaskCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Task"])
 class TaskRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskAdminSerializer)})
     def get(self, request, pk):
         return ok(TaskAdminSerializer(get_object_or_404(Task, pk=pk)).data)
 
+@extend_schema(tags=["Task"])
 class TaskUpdateView(APIView):
+    @extend_schema(request=TaskAdminSerializer, responses={200: _ok_response(TaskAdminSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = TaskAdminSerializer(get_object_or_404(Task, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -410,6 +505,7 @@ class TaskUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=TaskAdminSerializer, responses={200: _ok_response(TaskAdminSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = TaskAdminSerializer(get_object_or_404(Task, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -417,7 +513,9 @@ class TaskUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Task"])
 class TaskDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(Task, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
@@ -425,11 +523,15 @@ class TaskDestroyView(APIView):
 
 # TaskQuestion
 
+@extend_schema(tags=["Question"])
 class QuestionListView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskQuestionAdminSerializer, many=True)})
     def get(self, request):
         return ok(TaskQuestionAdminSerializer(TaskQuestion.objects.all(), many=True).data)
 
+@extend_schema(tags=["Question"])
 class QuestionCreateView(APIView):
+    @extend_schema(request=TaskQuestionAdminSerializer, responses={201: _ok_response(TaskQuestionAdminSerializer), 400: _err_response()})
     def post(self, request):
         serializer = TaskQuestionAdminSerializer(data=request.data)
         if serializer.is_valid():
@@ -437,11 +539,15 @@ class QuestionCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Question"])
 class QuestionRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskQuestionAdminSerializer)})
     def get(self, request, pk):
         return ok(TaskQuestionAdminSerializer(get_object_or_404(TaskQuestion, pk=pk)).data)
 
+@extend_schema(tags=["Question"])
 class QuestionUpdateView(APIView):
+    @extend_schema(request=TaskQuestionAdminSerializer, responses={200: _ok_response(TaskQuestionAdminSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = TaskQuestionAdminSerializer(get_object_or_404(TaskQuestion, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -449,6 +555,7 @@ class QuestionUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=TaskQuestionAdminSerializer, responses={200: _ok_response(TaskQuestionAdminSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = TaskQuestionAdminSerializer(get_object_or_404(TaskQuestion, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -456,18 +563,25 @@ class QuestionUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Question"])
 class QuestionDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(TaskQuestion, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
 
 
-#  TaskAnswer
+# TaskAnswer
+
+@extend_schema(tags=["Answer"])
 class AnswerListView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskAnswerAdminSerializer, many=True)})
     def get(self, request):
         return ok(TaskAnswerAdminSerializer(TaskAnswer.objects.all(), many=True).data)
 
+@extend_schema(tags=["Answer"])
 class AnswerCreateView(APIView):
+    @extend_schema(request=TaskAnswerAdminSerializer, responses={201: _ok_response(TaskAnswerAdminSerializer), 400: _err_response()})
     def post(self, request):
         serializer = TaskAnswerAdminSerializer(data=request.data)
         if serializer.is_valid():
@@ -475,11 +589,15 @@ class AnswerCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Answer"])
 class AnswerRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(TaskAnswerAdminSerializer)})
     def get(self, request, pk):
         return ok(TaskAnswerAdminSerializer(get_object_or_404(TaskAnswer, pk=pk)).data)
 
+@extend_schema(tags=["Answer"])
 class AnswerUpdateView(APIView):
+    @extend_schema(request=TaskAnswerAdminSerializer, responses={200: _ok_response(TaskAnswerAdminSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = TaskAnswerAdminSerializer(get_object_or_404(TaskAnswer, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -487,6 +605,7 @@ class AnswerUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=TaskAnswerAdminSerializer, responses={200: _ok_response(TaskAnswerAdminSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = TaskAnswerAdminSerializer(get_object_or_404(TaskAnswer, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -494,7 +613,9 @@ class AnswerUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Answer"])
 class AnswerDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(TaskAnswer, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
@@ -502,11 +623,15 @@ class AnswerDestroyView(APIView):
 
 # Submission
 
+@extend_schema(tags=["Submission"])
 class SubmissionListView(APIView):
+    @extend_schema(responses={200: _ok_response(SubmissionSerializer, many=True)})
     def get(self, request):
         return ok(SubmissionSerializer(Submission.objects.all(), many=True).data)
 
+@extend_schema(tags=["Submission"])
 class SubmissionCreateView(APIView):
+    @extend_schema(request=SubmissionSerializer, responses={201: _ok_response(SubmissionSerializer), 400: _err_response()})
     def post(self, request):
         serializer = SubmissionSerializer(data=request.data)
         if serializer.is_valid():
@@ -514,11 +639,15 @@ class SubmissionCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Submission"])
 class SubmissionRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(SubmissionSerializer)})
     def get(self, request, pk):
         return ok(SubmissionSerializer(get_object_or_404(Submission, pk=pk)).data)
 
+@extend_schema(tags=["Submission"])
 class SubmissionUpdateView(APIView):
+    @extend_schema(request=SubmissionSerializer, responses={200: _ok_response(SubmissionSerializer), 400: _err_response()})
     def put(self, request, pk):
         serializer = SubmissionSerializer(get_object_or_404(Submission, pk=pk), data=request.data)
         if serializer.is_valid():
@@ -526,6 +655,7 @@ class SubmissionUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+    @extend_schema(request=SubmissionSerializer, responses={200: _ok_response(SubmissionSerializer), 400: _err_response()})
     def patch(self, request, pk):
         serializer = SubmissionSerializer(get_object_or_404(Submission, pk=pk), data=request.data, partial=True)
         if serializer.is_valid():
@@ -533,7 +663,9 @@ class SubmissionUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
+@extend_schema(tags=["Submission"])
 class SubmissionDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
         get_object_or_404(Submission, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
@@ -641,8 +773,9 @@ class EvaluationMixin:
         }
 
 
-#  STUDENT API
+# STUDENT API
 
+@extend_schema(tags=["Student"], responses={200: _ok_response(TaskStudentSerializer, many=True)})
 class EducationTasksAPI(APIView):
     def get(self, request):
         res = [
@@ -653,6 +786,11 @@ class EducationTasksAPI(APIView):
         return ok(res)
 
 
+@extend_schema(
+    tags=["Student"],
+    request=inline_serializer("EducationSubmitRequest", fields={"task_id": s.IntegerField()}),
+    responses={200: inline_serializer("EducationSubmitResponse", fields={"ok": s.BooleanField(), "data": s.DictField()}), 400: _err_response()}
+)
 class EducationSubmitAPI(APIView, EvaluationMixin):
     def post(self, request):
         task_id = request.data.get('task_id')
@@ -662,6 +800,7 @@ class EducationSubmitAPI(APIView, EvaluationMixin):
         return ok(self._evaluate(task, request.data)['response'])
 
 
+@extend_schema(tags=["Control"], responses={200: _ok_response(TaskStudentSerializer), 404: _err_response()})
 class ControlTaskAPI(APIView):
     def get(self, request):
         t = Task.objects.filter(complexity__level__in=[3, 4]).order_by('?').first()
@@ -670,6 +809,19 @@ class ControlTaskAPI(APIView):
         return ok(TaskStudentSerializer(t).data)
 
 
+@extend_schema(
+    tags=["Control"],
+    request=inline_serializer("ControlSubmitRequest", fields={
+        "task_id": s.IntegerField(),
+        "time_spent": s.CharField(),
+        "start_time": s.CharField(required=False),
+        "answer_markup": s.ListField(child=s.DictField(), required=False),
+        "selected_question_ids": s.ListField(child=s.IntegerField(), required=False),
+        "student_characteristics": s.DictField(required=False),
+        "selected_answer_id": s.IntegerField(required=False),
+    }),
+    responses={200: inline_serializer("ControlSubmitResponse", fields={"ok": s.BooleanField(), "data": s.DictField()}), 400: _err_response()}
+)
 class ControlSubmitAPI(APIView, EvaluationMixin):
     permission_classes = [IsAuthenticated]
 
@@ -707,6 +859,7 @@ class ControlSubmitAPI(APIView, EvaluationMixin):
 
 # ADMIN API
 
+@extend_schema(tags=["Admin"], responses={200: _ok_response(StudentStatementSerializer, many=True)})
 class AdminAllSubmissionsAPI(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
 
@@ -715,6 +868,10 @@ class AdminAllSubmissionsAPI(APIView):
         return ok(StudentStatementSerializer(students, many=True).data)
 
 
+@extend_schema(
+    tags=["Admin"],
+    responses={200: inline_serializer("AdminSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": s.DictField()})}
+)
 class AdminSubmissionDetailAPI(APIView, EvaluationMixin):
     permission_classes = [IsAdminOrSuperAdmin]
 
