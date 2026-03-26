@@ -86,6 +86,9 @@ urlpatterns = [
     path("api/tasks/education/random/",      views.EducationTasksAPI.as_view()),
     path("api/submissions/education/check/", views.EducationSubmitAPI.as_view()),
 
+    # Студент: Профиль
+    path("api/profile/", views.UserProfileView.as_view(), name="user_profile"),
+
     # Студент: Контроль
     path("api/tasks/control/random/",       views.ControlTaskAPI.as_view()),
     path("api/submissions/control/submit/", views.ControlSubmitAPI.as_view()),

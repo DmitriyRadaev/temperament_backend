@@ -856,6 +856,16 @@ class ControlSubmitAPI(APIView, EvaluationMixin):
 
         return ok({**result['response'], "submission_id": obj.id})
 
+@extend_schema(
+    tags=["Auth"],
+    responses={200: _ok_response(UserProfileSerializer)}
+)
+class UserProfileView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserProfileSerializer
+
+    def get_object(self):
+        return self.request.user
 
 # ADMIN API
 

@@ -2,14 +2,14 @@ from rest_framework import serializers, generics
 from django.contrib.auth import get_user_model
 from .models import *
 
-
 Account = get_user_model()
 
 
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ("id", "email", "name", "surname", "patronymic", "is_active", "is_staff", "is_superuser", "created_at", "updated_at")
+        fields = ("id", "email", "name", "surname", "patronymic", "is_active", "is_staff", "is_superuser", "created_at",
+                  "updated_at")
         read_only_fields = ("id", "created_at", "updated_at")
 
 
@@ -173,15 +173,33 @@ class TaskCategoryStudentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'config']
 
 
+class CharacteristicSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    color = serializers.CharField()
+
+
+class CorrectQuestionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    text = serializers.CharField()
+    answer = serializers.CharField()
+
+
+class AnswerOptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    text = serializers.CharField()
+
+
 class TaskStudentSerializer(serializers.ModelSerializer):
-    characteristics = serializers.SerializerMethodField()
-    correctQuestions = serializers.SerializerMethodField()
-    answerOptions = serializers.SerializerMethodField()
+    characteristics = CharacteristicSerializer(many=True, read_only=True)
+    correctQuestions = CorrectQuestionSerializer(many=True, read_only=True)
+    answerOptions = AnswerOptionSerializer(many=True, read_only=True)
     complexity_level = serializers.IntegerField(source='complexity.level', read_only=True)
 
     class Meta:
         model = Task
-        fields = ['id', 'text', 'condition', 'complexity_level', 'characteristics', 'correctQuestions', 'answerOptions']
+        fields = ['id', 'text', 'condition', 'complexity_level', 'characteristics',
+                  'correctQuestions', 'answerOptions']
 
     def get_characteristics(self, obj):
         markups = CategoryMarkup.objects.filter(task_category=obj.category).select_related('color_markup')
@@ -243,3 +261,13 @@ class StudentStatementSerializer(serializers.ModelSerializer):
             {"number": i + 1, "id": att.id}
             for i, att in enumerate(self._get_sorted_attempts(obj))
         ]
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    # Достаем группу напрямую из связанной модели StudentProfile
+    group = serializers.CharField(source='student_profile.group', read_only=True)
+
+    class Meta:
+        model = Account
+        fields = ("id", "email", "name", "surname", "patronymic", "role", "group", "is_staff")
+        read_only_fields = fields
