@@ -14,12 +14,11 @@ class AccountManager(BaseUserManager):
             raise ValueError("Surname is required")
 
         email = self.normalize_email(email)
-        # Сохраняем name, surname, patronymic
         user = self.model(
             email=email,
             name=name,
             surname=surname,
-            patronymic=patronymic or "",  # Если None, пишем пустую строку
+            patronymic=patronymic or "",
             role=role,
             **kwargs
         )
@@ -29,7 +28,6 @@ class AccountManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, name, surname, password=None, **kwargs):
-        # Передаем параметры в create_user
         user = self.create_user(
             email=email,
             name=name,
@@ -155,7 +153,7 @@ class TaskComplexity(models.Model):
 
 class ColorsMarkup(models.Model):
     name = models.CharField(max_length=100)
-    style = models.CharField(max_length=255) # bg-blue-200
+    style = models.CharField(max_length=255)  # bg-blue-200
     def __str__(self): return self.name
 
 class CategoryMarkup(models.Model):
@@ -163,6 +161,25 @@ class CategoryMarkup(models.Model):
     slug = models.SlugField(unique=True)
     color_markup = models.ForeignKey(ColorsMarkup, on_delete=models.CASCADE)
     task_category = models.ForeignKey(TaskCategory, on_delete=models.CASCADE, related_name="markup_buttons")
+
+    def __str__(self): return self.name
+
+
+class MarkupOption(models.Model):
+    category_markup = models.ForeignKey(
+        CategoryMarkup,
+        on_delete=models.CASCADE,
+        related_name="options"
+    )
+    name = models.CharField(max_length=255, verbose_name="Название варианта")
+    slug = models.SlugField(verbose_name="Slug варианта")
+
+    class Meta:
+        unique_together = ("category_markup", "slug")
+
+    def __str__(self):
+        return f"{self.category_markup.name} → {self.name}"
+
 
 class Task(models.Model):
     category = models.ForeignKey(TaskCategory, on_delete=models.CASCADE, related_name="tasks")
@@ -174,7 +191,7 @@ class Task(models.Model):
 
 class TaskQuestion(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="questions")
-    text = models.TextField() # question
+    text = models.TextField()   # question
     answer = models.TextField() # answer
     is_correct = models.BooleanField(default=False)
 

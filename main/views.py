@@ -471,6 +471,56 @@ class CategoryMarkupDestroyView(APIView):
         return ok({"detail": "Запись удалена"})
 
 
+# MarkupOption
+
+@extend_schema(tags=["MarkupOption"])
+class MarkupOptionListView(APIView):
+    @extend_schema(responses={200: _ok_response(MarkupOptionSerializer, many=True)})
+    def get(self, request):
+        return ok(MarkupOptionSerializer(MarkupOption.objects.all(), many=True).data)
+
+@extend_schema(tags=["MarkupOption"])
+class MarkupOptionCreateView(APIView):
+    @extend_schema(request=MarkupOptionSerializer, responses={201: _ok_response(MarkupOptionSerializer), 400: _err_response()})
+    def post(self, request):
+        serializer = MarkupOptionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return created(serializer.data)
+        return err("Неверные данные", _serializer_hint(serializer.errors))
+
+@extend_schema(tags=["MarkupOption"])
+class MarkupOptionRetrieveView(APIView):
+    @extend_schema(responses={200: _ok_response(MarkupOptionSerializer)})
+    def get(self, request, pk):
+        return ok(MarkupOptionSerializer(get_object_or_404(MarkupOption, pk=pk)).data)
+
+@extend_schema(tags=["MarkupOption"])
+class MarkupOptionUpdateView(APIView):
+    @extend_schema(request=MarkupOptionSerializer, responses={200: _ok_response(MarkupOptionSerializer), 400: _err_response()})
+    def put(self, request, pk):
+        serializer = MarkupOptionSerializer(get_object_or_404(MarkupOption, pk=pk), data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return ok(serializer.data)
+        return err("Неверные данные", _serializer_hint(serializer.errors))
+
+    @extend_schema(request=MarkupOptionSerializer, responses={200: _ok_response(MarkupOptionSerializer), 400: _err_response()})
+    def patch(self, request, pk):
+        serializer = MarkupOptionSerializer(get_object_or_404(MarkupOption, pk=pk), data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return ok(serializer.data)
+        return err("Неверные данные", _serializer_hint(serializer.errors))
+
+@extend_schema(tags=["MarkupOption"])
+class MarkupOptionDestroyView(APIView):
+    @extend_schema(responses={200: _deleted_response()})
+    def delete(self, request, pk):
+        get_object_or_404(MarkupOption, pk=pk).delete()
+        return ok({"detail": "Запись удалена"})
+
+
 # Task
 
 @extend_schema(tags=["Task"])
@@ -866,6 +916,29 @@ class UserProfileView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+# STUDENT: просмотр своей попытки
+
+@extend_schema(
+    tags=["Student"],
+    responses={200: inline_serializer("StudentSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": s.DictField()}), 403: _err_response(), 404: _err_response()}
+)
+class StudentSubmissionDetailAPI(APIView, EvaluationMixin):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        submission = get_object_or_404(Submission, pk=pk)
+        if submission.student != request.user:
+            return err("Нет доступа к этой попытке", status_code=status.HTTP_403_FORBIDDEN)
+        data_to_compare = {
+            "answer_markup": submission.answer_markup,
+            "selected_question_ids": submission.selected_question_ids,
+            "selected_answer_id": submission.selected_answer_id,
+            "student_characteristics": submission.student_characteristics,
+            "time_spent": submission.spent_time,
+        }
+        return ok(self._evaluate(submission.task, data_to_compare)['response'])
+
 
 # ADMIN API
 

@@ -54,6 +54,13 @@ urlpatterns = [
     path("api/markup/<int:pk>/update/", views.CategoryMarkupUpdateView.as_view()),
     path("api/markup/<int:pk>/delete/", views.CategoryMarkupDestroyView.as_view()),
 
+    # MarkupOption
+    path("api/markup-option/all/",             views.MarkupOptionListView.as_view()),
+    path("api/markup-option/create/",          views.MarkupOptionCreateView.as_view()),
+    path("api/markup-option/<int:pk>/",        views.MarkupOptionRetrieveView.as_view()),
+    path("api/markup-option/<int:pk>/update/", views.MarkupOptionUpdateView.as_view()),
+    path("api/markup-option/<int:pk>/delete/", views.MarkupOptionDestroyView.as_view()),
+
     # Task
     path("api/task/all/",             views.TaskListView.as_view()),
     path("api/task/create/",          views.TaskCreateView.as_view()),
@@ -92,6 +99,7 @@ urlpatterns = [
     # Студент: Контроль
     path("api/tasks/control/random/",       views.ControlTaskAPI.as_view()),
     path("api/submissions/control/submit/", views.ControlSubmitAPI.as_view()),
+    path("api/submissions/<int:pk>/",       views.StudentSubmissionDetailAPI.as_view()),
 
     # Отчеты
     path("api/admin/submissions/all/",      views.AdminAllSubmissionsAPI.as_view()),

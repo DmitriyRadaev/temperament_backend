@@ -126,6 +126,12 @@ class ColorsMarkupSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class MarkupOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarkupOption
+        fields = '__all__'
+
+
 class CategoryMarkupSerializer(serializers.ModelSerializer):
     style = serializers.CharField(source='color_markup.style', read_only=True)
 
@@ -173,16 +179,29 @@ class TaskCategoryStudentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'config']
 
 
+class CharacteristicOptionSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+
+
 class CharacteristicSerializer(serializers.Serializer):
     id = serializers.CharField()
     name = serializers.CharField()
     color = serializers.CharField()
+    options = CharacteristicOptionSerializer(many=True)
 
 
-class CorrectQuestionSerializer(serializers.Serializer):
+class QuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     text = serializers.CharField()
     answer = serializers.CharField()
+
+
+class QuestionWithCorrectSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    text = serializers.CharField()
+    answer = serializers.CharField()
+    is_correct = serializers.BooleanField()
 
 
 class AnswerOptionSerializer(serializers.Serializer):
@@ -191,22 +210,38 @@ class AnswerOptionSerializer(serializers.Serializer):
 
 
 class TaskStudentSerializer(serializers.ModelSerializer):
-    characteristics = CharacteristicSerializer(many=True, read_only=True)
-    correctQuestions = CorrectQuestionSerializer(many=True, read_only=True)
-    answerOptions = AnswerOptionSerializer(many=True, read_only=True)
+    characteristics = serializers.SerializerMethodField()
+    questions = serializers.SerializerMethodField()
+    answerOptions = serializers.SerializerMethodField()
     complexity_level = serializers.IntegerField(source='complexity.level', read_only=True)
 
     class Meta:
         model = Task
         fields = ['id', 'text', 'condition', 'complexity_level', 'characteristics',
-                  'correctQuestions', 'answerOptions']
+                  'questions', 'answerOptions']
 
     def get_characteristics(self, obj):
-        markups = CategoryMarkup.objects.filter(task_category=obj.category).select_related('color_markup')
-        return [{"id": m.slug, "name": m.name, "color": m.color_markup.style} for m in markups]
+        markups = CategoryMarkup.objects.filter(
+            task_category=obj.category
+        ).select_related('color_markup').prefetch_related('options')
+        return [
+            {
+                "id": m.slug,
+                "name": m.name,
+                "color": m.color_markup.style,
+                "options": [
+                    {"id": opt.slug, "name": opt.name}
+                    for opt in m.options.all()
+                ],
+            }
+            for m in markups
+        ]
 
-    def get_correctQuestions(self, obj):
-        return [{"id": q.id, "text": q.text, "answer": q.answer} for q in obj.questions.all()]
+    def get_questions(self, obj):
+        return [
+            {"id": q.id, "text": q.text, "answer": q.answer}
+            for q in obj.questions.all()
+        ]
 
     def get_answerOptions(self, obj):
         return [{"id": a.id, "text": a.text} for a in obj.answers.all()]
@@ -264,7 +299,6 @@ class StudentStatementSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    # Достаем группу напрямую из связанной модели StudentProfile
     group = serializers.CharField(source='student_profile.group', read_only=True)
 
     class Meta:
