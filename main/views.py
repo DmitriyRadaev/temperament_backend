@@ -60,11 +60,11 @@ def _serializer_hint(errors: dict) -> str:
 
 # вспомогательные inline-схемы для swagger
 def _ok_response(serializer_class, many=False):
-    """Оборачивает сериализатор в {"ok": true, "data": ...} для swagger."""
-    data_field = serializer_class(many=many) if many else serializer_class()
+    if many:
+        return serializer_class(many=True)
     return inline_serializer(
-        name=f"Ok{serializer_class.__name__}{'List' if many else ''}",
-        fields={"ok": s.BooleanField(), "data": data_field}
+        name=f"Ok{serializer_class.__name__}",
+        fields={"ok": s.BooleanField(), "data": serializer_class()}
     )
 
 def _err_response():
@@ -473,15 +473,15 @@ class CategoryMarkupDestroyView(APIView):
 
 # MarkupOption
 
-@extend_schema(tags=["MarkupOption"])
+@extend_schema(tags=["Варианты характеристик (MarkupOption)"])
 class MarkupOptionListView(APIView):
-    @extend_schema(responses={200: _ok_response(MarkupOptionSerializer, many=True)})
+    @extend_schema(summary="Все варианты характеристик", responses={200: _ok_response(MarkupOptionSerializer, many=True)})
     def get(self, request):
         return ok(MarkupOptionSerializer(MarkupOption.objects.all(), many=True).data)
 
-@extend_schema(tags=["MarkupOption"])
+@extend_schema(tags=["Варианты характеристик (MarkupOption)"])
 class MarkupOptionCreateView(APIView):
-    @extend_schema(request=MarkupOptionSerializer, responses={201: _ok_response(MarkupOptionSerializer), 400: _err_response()})
+    @extend_schema(summary="Создать вариант характеристики", request=MarkupOptionSerializer, responses={201: _ok_response(MarkupOptionSerializer), 400: _err_response()})
     def post(self, request):
         serializer = MarkupOptionSerializer(data=request.data)
         if serializer.is_valid():
@@ -489,13 +489,13 @@ class MarkupOptionCreateView(APIView):
             return created(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
-@extend_schema(tags=["MarkupOption"])
+@extend_schema(tags=["Варианты характеристик (MarkupOption)"])
 class MarkupOptionRetrieveView(APIView):
-    @extend_schema(responses={200: _ok_response(MarkupOptionSerializer)})
+    @extend_schema(summary="Получить вариант характеристики", responses={200: _ok_response(MarkupOptionSerializer)})
     def get(self, request, pk):
         return ok(MarkupOptionSerializer(get_object_or_404(MarkupOption, pk=pk)).data)
 
-@extend_schema(tags=["MarkupOption"])
+@extend_schema(tags=["Варианты характеристик (MarkupOption)"])
 class MarkupOptionUpdateView(APIView):
     @extend_schema(request=MarkupOptionSerializer, responses={200: _ok_response(MarkupOptionSerializer), 400: _err_response()})
     def put(self, request, pk):
@@ -513,7 +513,7 @@ class MarkupOptionUpdateView(APIView):
             return ok(serializer.data)
         return err("Неверные данные", _serializer_hint(serializer.errors))
 
-@extend_schema(tags=["MarkupOption"])
+@extend_schema(tags=["Варианты характеристик (MarkupOption)"])
 class MarkupOptionDestroyView(APIView):
     @extend_schema(responses={200: _deleted_response()})
     def delete(self, request, pk):
@@ -823,9 +823,171 @@ class EvaluationMixin:
         }
 
 
-# STUDENT API
+# Элемент покраски (вход)
+_markup_item_in = inline_serializer("MarkupItemIn", fields={
+    "start":         s.IntegerField(help_text="Символьная позиция начала выделения"),
+    "end":           s.IntegerField(help_text="Символьная позиция конца выделения"),
+    "category_slug": s.CharField(help_text="Slug характеристики, напр. 'strength'"),
+})
 
-@extend_schema(tags=["Student"], responses={200: _ok_response(TaskStudentSerializer, many=True)})
+# Элемент покраски в ответе
+_markup_item_out = inline_serializer("MarkupItemOut", fields={
+    "start": s.IntegerField(),
+    "end":   s.IntegerField(),
+    "style": s.CharField(help_text="CSS-класс цвета, напр. 'bg-blue-200'"),
+})
+
+# Вопрос в ответе
+_question_out = inline_serializer("QuestionOut", fields={
+    "id":       s.IntegerField(),
+    "question": s.CharField(),
+    "answer":   s.CharField(),
+})
+
+# Ответ (финальный вариант)
+_answer_out = inline_serializer("AnswerOut", fields={
+    "id":   s.IntegerField(),
+    "text": s.CharField(),
+})
+
+# Характеристика в результате
+_characteristic_result = inline_serializer("CharacteristicResult", fields={
+    "name":                   s.CharField(help_text="Название характеристики, напр. 'Сила'"),
+    "color":                  s.CharField(help_text="CSS-класс цвета"),
+    "studentCharacteristics": s.CharField(allow_null=True, help_text="Slug выбранной студентом опции"),
+    "correctCharacteristics": s.CharField(allow_null=True, help_text="Slug правильной опции"),
+})
+
+
+from rest_framework.serializers import Serializer as _S
+
+def _make_serializer(name, field_dict):
+    """Создаёт именованный класс сериализатора — можно использовать как child= и many=True."""
+    return type(name, (_S,), field_dict)
+
+MarkupItemOutSerializer = _make_serializer("MarkupItemOut", {
+    "start": s.IntegerField(),
+    "end":   s.IntegerField(),
+    "style": s.CharField(),
+})
+
+MarkupItemInSerializer = _make_serializer("MarkupItemIn", {
+    "start":         s.IntegerField(),
+    "end":           s.IntegerField(),
+    "category_slug": s.CharField(),
+})
+
+QuestionOutSerializer = _make_serializer("QuestionOut", {
+    "id":       s.IntegerField(),
+    "question": s.CharField(),
+    "answer":   s.CharField(),
+})
+
+CharacteristicResultSerializer = _make_serializer("CharacteristicResult", {
+    "name":                   s.CharField(),
+    "color":                  s.CharField(),
+    "studentCharacteristics": s.CharField(allow_null=True),
+    "correctCharacteristics": s.CharField(allow_null=True),
+})
+
+CharacteristicOptionSerializer = _make_serializer("CharacteristicOption", {
+    "id":   s.CharField(),
+    "name": s.CharField(),
+})
+
+CharacteristicInTaskSerializer = _make_serializer("CharacteristicInTask", {
+    "id":      s.CharField(),
+    "name":    s.CharField(),
+    "color":   s.CharField(),
+    "options": CharacteristicOptionSerializer(many=True),
+})
+
+QuestionInTaskSerializer = _make_serializer("QuestionInTask", {
+    "id":     s.IntegerField(),
+    "text":   s.CharField(),
+    "answer": s.CharField(),
+})
+
+AnswerOptionInTaskSerializer = _make_serializer("AnswerOptionInTask", {
+    "id":   s.IntegerField(),
+    "text": s.CharField(),
+})
+
+AnswerOutSerializer = _make_serializer("AnswerOut", {
+    "id":   s.IntegerField(),
+    "text": s.CharField(),
+})
+
+# Результат оценивания (общий для submit и detail)
+_evaluation_result = inline_serializer("EvaluationResult", fields={
+    "grade":            s.CharField(help_text="Отлично / Хорошо / Удовлетворительно / Попробуйте еще раз"),
+    "spent_time":       s.CharField(),
+    "text":             s.CharField(help_text="Текст задачи"),
+    "studentAnswer":    AnswerOutSerializer(),
+    "correctAnswer":    AnswerOutSerializer(),
+    "studentMarkup":    MarkupItemOutSerializer(many=True),
+    "correctMarkup":    MarkupItemOutSerializer(many=True),
+    "studentQuestions": QuestionOutSerializer(many=True),
+    "correctQuestions": QuestionOutSerializer(many=True),
+    "characteristics":  CharacteristicResultSerializer(many=True),
+})
+
+# Результат submit (evaluation + submission_id)
+_submit_result = inline_serializer("SubmitResult", fields={
+    "grade":            s.CharField(),
+    "spent_time":       s.CharField(),
+    "text":             s.CharField(),
+    "submission_id":    s.IntegerField(help_text="ID сохранённой попытки"),
+    "studentAnswer":    AnswerOutSerializer(),
+    "correctAnswer":    AnswerOutSerializer(),
+    "studentMarkup":    MarkupItemOutSerializer(many=True),
+    "correctMarkup":    MarkupItemOutSerializer(many=True),
+    "studentQuestions": QuestionOutSerializer(many=True),
+    "correctQuestions": QuestionOutSerializer(many=True),
+    "characteristics":  CharacteristicResultSerializer(many=True),
+})
+
+# Схема запроса submit (общая для обучения и контроля)
+_submit_request = inline_serializer("SubmitRequest", fields={
+    "task_id":    s.IntegerField(help_text="ID задачи"),
+    "time_spent": s.CharField(help_text="Затраченное время HH:MM:SS"),
+    "start_time": s.CharField(required=False, help_text="ISO datetime начала, напр. '2025-01-15T10:00:00'"),
+    "answer_markup": MarkupItemInSerializer(many=True),
+    "selected_question_ids": s.ListField(
+        required=False,
+        child=s.IntegerField(),
+        help_text="ID вопросов чат-бота, которые задал студент",
+    ),
+    "student_characteristics": s.DictField(
+        required=False,
+        child=s.CharField(),
+        help_text='Ключ — slug характеристики, значение — slug опции. Пример: {"strength": "strong"}',
+    ),
+    "selected_answer_id": s.IntegerField(required=False, help_text="ID выбранного варианта финального ответа"),
+})
+
+# Полная схема задачи для студента
+TaskStudentSchemaSerializer = _make_serializer("TaskStudentSchema", {
+    "id":               s.IntegerField(),
+    "text":             s.CharField(),
+    "condition":        s.CharField(),
+    "complexity_level": s.IntegerField(),
+    "characteristics":  CharacteristicInTaskSerializer(many=True),
+    "questions":        QuestionInTaskSerializer(many=True),
+    "answerOptions":    AnswerOptionInTaskSerializer(many=True),
+})
+_task_student_schema = TaskStudentSchemaSerializer()  # инстанс для одиночного использования
+
+# ─── Student API ──────────────────────────────────────────────────────────────
+
+@extend_schema(
+    tags=["Обучение"],
+    summary="Получить задачи для обучения (по одной на каждый уровень сложности 1–4)",
+    responses={200: inline_serializer("EducationTasksResponse", fields={
+        "ok":   s.BooleanField(),
+        "data": TaskStudentSchemaSerializer(many=True),
+    })}
+)
 class EducationTasksAPI(APIView):
     def get(self, request):
         res = [
@@ -837,9 +999,13 @@ class EducationTasksAPI(APIView):
 
 
 @extend_schema(
-    tags=["Student"],
-    request=inline_serializer("EducationSubmitRequest", fields={"task_id": s.IntegerField()}),
-    responses={200: inline_serializer("EducationSubmitResponse", fields={"ok": s.BooleanField(), "data": s.DictField()}), 400: _err_response()}
+    tags=["Обучение"],
+    summary="Проверить решение обучающей задачи (без сохранения попытки)",
+    request=_submit_request,
+    responses={
+        200: inline_serializer("EducationSubmitResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
+        400: _err_response(),
+    }
 )
 class EducationSubmitAPI(APIView, EvaluationMixin):
     def post(self, request):
@@ -850,7 +1016,14 @@ class EducationSubmitAPI(APIView, EvaluationMixin):
         return ok(self._evaluate(task, request.data)['response'])
 
 
-@extend_schema(tags=["Control"], responses={200: _ok_response(TaskStudentSerializer), 404: _err_response()})
+@extend_schema(
+    tags=["Контроль"],
+    summary="Получить случайную задачу для контроля (уровень сложности 3 или 4)",
+    responses={
+        200: inline_serializer("ControlTaskResponse", fields={"ok": s.BooleanField(), "data": _task_student_schema}),
+        404: _err_response(),
+    }
+)
 class ControlTaskAPI(APIView):
     def get(self, request):
         t = Task.objects.filter(complexity__level__in=[3, 4]).order_by('?').first()
@@ -860,17 +1033,13 @@ class ControlTaskAPI(APIView):
 
 
 @extend_schema(
-    tags=["Control"],
-    request=inline_serializer("ControlSubmitRequest", fields={
-        "task_id": s.IntegerField(),
-        "time_spent": s.CharField(),
-        "start_time": s.CharField(required=False),
-        "answer_markup": s.ListField(child=s.DictField(), required=False),
-        "selected_question_ids": s.ListField(child=s.IntegerField(), required=False),
-        "student_characteristics": s.DictField(required=False),
-        "selected_answer_id": s.IntegerField(required=False),
-    }),
-    responses={200: inline_serializer("ControlSubmitResponse", fields={"ok": s.BooleanField(), "data": s.DictField()}), 400: _err_response()}
+    tags=["Контроль"],
+    summary="Отправить решение контрольной задачи (сохраняется, макс. 3 попытки)",
+    request=_submit_request,
+    responses={
+        200: inline_serializer("ControlSubmitResponse", fields={"ok": s.BooleanField(), "data": _submit_result}),
+        400: _err_response(),
+    }
 )
 class ControlSubmitAPI(APIView, EvaluationMixin):
     permission_classes = [IsAuthenticated]
@@ -907,7 +1076,8 @@ class ControlSubmitAPI(APIView, EvaluationMixin):
         return ok({**result['response'], "submission_id": obj.id})
 
 @extend_schema(
-    tags=["Auth"],
+    tags=["Профиль студента"],
+    summary="Профиль текущего авторизованного пользователя",
     responses={200: _ok_response(UserProfileSerializer)}
 )
 class UserProfileView(generics.RetrieveAPIView):
@@ -917,11 +1087,16 @@ class UserProfileView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-# STUDENT: просмотр своей попытки
 
 @extend_schema(
-    tags=["Student"],
-    responses={200: inline_serializer("StudentSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": s.DictField()}), 403: _err_response(), 404: _err_response()}
+    tags=["Контроль"],
+    summary="Результат попытки студента — оценка, покраска, правильный ответ",
+    description="Студент видит только свои попытки. submission_id возвращается в ответе на submit.",
+    responses={
+        200: inline_serializer("StudentSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
+        403: _err_response(),
+        404: _err_response(),
+    }
 )
 class StudentSubmissionDetailAPI(APIView, EvaluationMixin):
     permission_classes = [IsAuthenticated]
@@ -942,7 +1117,11 @@ class StudentSubmissionDetailAPI(APIView, EvaluationMixin):
 
 # ADMIN API
 
-@extend_schema(tags=["Admin"], responses={200: _ok_response(StudentStatementSerializer, many=True)})
+@extend_schema(
+    tags=["Отчёты (Admin)"],
+    summary="Сводная таблица: все студенты со сданными попытками",
+    responses={200: _ok_response(StudentStatementSerializer, many=True)}
+)
 class AdminAllSubmissionsAPI(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
 
@@ -952,8 +1131,13 @@ class AdminAllSubmissionsAPI(APIView):
 
 
 @extend_schema(
-    tags=["Admin"],
-    responses={200: inline_serializer("AdminSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": s.DictField()})}
+    tags=["Отчёты (Admin)"],
+    summary="Детальный просмотр конкретной попытки студента",
+    description="Возвращает полный разбор: покраска студента vs эталон, выбранный и правильный ответ, вопросы, характеристики.",
+    responses={
+        200: inline_serializer("AdminSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
+        404: _err_response(),
+    }
 )
 class AdminSubmissionDetailAPI(APIView, EvaluationMixin):
     permission_classes = [IsAdminOrSuperAdmin]
