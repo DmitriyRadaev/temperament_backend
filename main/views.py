@@ -18,7 +18,6 @@ from .serializers import *
 
 Account = get_user_model()
 
-
 def custom_exception_handler(exc, context):
     from rest_framework.views import exception_handler
     drf_response = exception_handler(exc, context)
@@ -36,7 +35,6 @@ def custom_exception_handler(exc, context):
         message = str(data)
     drf_response.data = {"ok": False, "error": message}
     return drf_response
-
 
 def ok(data=None, status_code=status.HTTP_200_OK):
     return Response({"ok": True, "data": data}, status=status_code)
@@ -56,7 +54,6 @@ def _serializer_hint(errors: dict) -> str:
         text = "; ".join(str(m) for m in messages) if isinstance(messages, list) else str(messages)
         hints.append(text if field == "non_field_errors" else f"{field}: {text}")
     return " | ".join(hints)
-
 
 # вспомогательные inline-схемы для swagger
 def _ok_response(serializer_class, many=False):
@@ -79,11 +76,9 @@ def _deleted_response():
         fields={"ok": s.BooleanField(), "data": inline_serializer(name="DeletedData", fields={"detail": s.CharField()})}
     )
 
-
 def get_user_tokens(user):
     refresh = tokens.RefreshToken.for_user(user)
     return {"refresh_token": str(refresh), "access_token": str(refresh.access_token)}
-
 
 # AUTH
 
@@ -125,7 +120,6 @@ def loginView(request):
     res["X-CSRFToken"] = csrf.get_token(request)
     return res
 
-
 @extend_schema(
     tags=["Auth"],
     request=None,
@@ -150,7 +144,6 @@ def logoutView(request):
     res.delete_cookie(key="X-CSRFToken", path='/', samesite=settings.CSRF_COOKIE_SAMESITE)
     return res
 
-
 class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
     refresh = None
 
@@ -159,7 +152,6 @@ class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
         if attrs['refresh']:
             return super().validate(attrs)
         raise jwt_exceptions.InvalidToken("No valid refresh token in cookie")
-
 
 @extend_schema(tags=["Auth"])
 class CookieTokenRefreshView(jwt_views.TokenRefreshView):
@@ -181,7 +173,6 @@ class CookieTokenRefreshView(jwt_views.TokenRefreshView):
         response_obj["X-CSRFToken"] = request.COOKIES.get("csrftoken")
         return super().finalize_response(request, response_obj, *args, **kwargs)
 
-
 @extend_schema(tags=["Auth"], request=StudentRegistrationSerializer, responses={201: _ok_response(StudentRegistrationSerializer), 400: _err_response()})
 class StudentRegisterView(generics.CreateAPIView):
     serializer_class = StudentRegistrationSerializer
@@ -193,7 +184,6 @@ class StudentRegisterView(generics.CreateAPIView):
             serializer.save()
             return created(serializer.data)
         return err("Ошибка регистрации", _serializer_hint(serializer.errors))
-
 
 @extend_schema(tags=["Auth"], request=AdminRegistrationSerializer, responses={201: _ok_response(AdminRegistrationSerializer), 400: _err_response()})
 class AdminRegisterView(generics.CreateAPIView):
@@ -207,7 +197,6 @@ class AdminRegisterView(generics.CreateAPIView):
             return created(serializer.data)
         return err("Ошибка регистрации администратора", _serializer_hint(serializer.errors))
 
-
 @extend_schema(tags=["Auth"], request=SuperAdminRegistrationSerializer, responses={201: _ok_response(SuperAdminRegistrationSerializer), 400: _err_response()})
 class SuperAdminRegisterView(generics.CreateAPIView):
     serializer_class = SuperAdminRegistrationSerializer
@@ -219,7 +208,6 @@ class SuperAdminRegisterView(generics.CreateAPIView):
             serializer.save()
             return created(serializer.data)
         return err("Ошибка регистрации супер-администратора", _serializer_hint(serializer.errors))
-
 
 # TaskCategory
 
@@ -270,7 +258,6 @@ class TaskCategoryDestroyView(APIView):
         get_object_or_404(TaskCategory, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
 
-
 # CategoryConfig
 
 @extend_schema(tags=["CategoryConfig"])
@@ -319,7 +306,6 @@ class CategoryConfigDestroyView(APIView):
     def delete(self, request, pk):
         get_object_or_404(CategoryConfig, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
-
 
 # TaskComplexity
 
@@ -370,7 +356,6 @@ class ComplexityDestroyView(APIView):
         get_object_or_404(TaskComplexity, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
 
-
 # ColorsMarkup
 
 @extend_schema(tags=["Colors"])
@@ -419,7 +404,6 @@ class ColorsMarkupDestroyView(APIView):
     def delete(self, request, pk):
         get_object_or_404(ColorsMarkup, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
-
 
 # CategoryMarkup
 
@@ -470,7 +454,6 @@ class CategoryMarkupDestroyView(APIView):
         get_object_or_404(CategoryMarkup, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
 
-
 # MarkupOption
 
 @extend_schema(tags=["Варианты характеристик (MarkupOption)"])
@@ -519,7 +502,6 @@ class MarkupOptionDestroyView(APIView):
     def delete(self, request, pk):
         get_object_or_404(MarkupOption, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
-
 
 # Task
 
@@ -570,7 +552,6 @@ class TaskDestroyView(APIView):
         get_object_or_404(Task, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
 
-
 # TaskQuestion
 
 @extend_schema(tags=["Question"])
@@ -619,7 +600,6 @@ class QuestionDestroyView(APIView):
     def delete(self, request, pk):
         get_object_or_404(TaskQuestion, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
-
 
 # TaskAnswer
 
@@ -670,7 +650,6 @@ class AnswerDestroyView(APIView):
         get_object_or_404(TaskAnswer, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
 
-
 # Submission
 
 @extend_schema(tags=["Submission"])
@@ -719,7 +698,6 @@ class SubmissionDestroyView(APIView):
     def delete(self, request, pk):
         get_object_or_404(Submission, pk=pk).delete()
         return ok({"detail": "Запись удалена"})
-
 
 # EVALUATION MIXIN
 
@@ -822,19 +800,18 @@ class EvaluationMixin:
             },
         }
 
-
 # Элемент покраски (вход)
 _markup_item_in = inline_serializer("MarkupItemIn", fields={
-    "start":         s.IntegerField(help_text="Символьная позиция начала выделения"),
-    "end":           s.IntegerField(help_text="Символьная позиция конца выделения"),
-    "category_slug": s.CharField(help_text="Slug характеристики, напр. 'strength'"),
+    "start":         s.IntegerField(),
+    "end":           s.IntegerField(),
+    "category_slug": s.CharField(),
 })
 
 # Элемент покраски в ответе
 _markup_item_out = inline_serializer("MarkupItemOut", fields={
     "start": s.IntegerField(),
     "end":   s.IntegerField(),
-    "style": s.CharField(help_text="CSS-класс цвета, напр. 'bg-blue-200'"),
+    "style": s.CharField(),
 })
 
 # Вопрос в ответе
@@ -852,12 +829,11 @@ _answer_out = inline_serializer("AnswerOut", fields={
 
 # Характеристика в результате
 _characteristic_result = inline_serializer("CharacteristicResult", fields={
-    "name":                   s.CharField(help_text="Название характеристики, напр. 'Сила'"),
-    "color":                  s.CharField(help_text="CSS-класс цвета"),
-    "studentCharacteristics": s.CharField(allow_null=True, help_text="Slug выбранной студентом опции"),
-    "correctCharacteristics": s.CharField(allow_null=True, help_text="Slug правильной опции"),
+    "name":                   s.CharField(),
+    "color":                  s.CharField(),
+    "studentCharacteristics": s.CharField(allow_null=True),
+    "correctCharacteristics": s.CharField(allow_null=True),
 })
-
 
 from rest_framework.serializers import Serializer as _S
 
@@ -920,9 +896,9 @@ AnswerOutSerializer = _make_serializer("AnswerOut", {
 
 # Результат оценивания (общий для submit и detail)
 _evaluation_result = inline_serializer("EvaluationResult", fields={
-    "grade":            s.CharField(help_text="Отлично / Хорошо / Удовлетворительно / Попробуйте еще раз"),
+    "grade":            s.CharField(),
     "spent_time":       s.CharField(),
-    "text":             s.CharField(help_text="Текст задачи"),
+    "text":             s.CharField(),
     "studentAnswer":    AnswerOutSerializer(),
     "correctAnswer":    AnswerOutSerializer(),
     "studentMarkup":    MarkupItemOutSerializer(many=True),
@@ -937,7 +913,7 @@ _submit_result = inline_serializer("SubmitResult", fields={
     "grade":            s.CharField(),
     "spent_time":       s.CharField(),
     "text":             s.CharField(),
-    "submission_id":    s.IntegerField(help_text="ID сохранённой попытки"),
+    "submission_id":    s.IntegerField(),
     "studentAnswer":    AnswerOutSerializer(),
     "correctAnswer":    AnswerOutSerializer(),
     "studentMarkup":    MarkupItemOutSerializer(many=True),
@@ -949,21 +925,19 @@ _submit_result = inline_serializer("SubmitResult", fields={
 
 # Схема запроса submit (общая для обучения и контроля)
 _submit_request = inline_serializer("SubmitRequest", fields={
-    "task_id":    s.IntegerField(help_text="ID задачи"),
-    "time_spent": s.CharField(help_text="Затраченное время HH:MM:SS"),
-    "start_time": s.CharField(required=False, help_text="ISO datetime начала, напр. '2025-01-15T10:00:00'"),
+    "task_id":    s.IntegerField(),
+    "time_spent": s.CharField(),
+    "start_time": s.CharField(required=False),
     "answer_markup": MarkupItemInSerializer(many=True),
     "selected_question_ids": s.ListField(
         required=False,
         child=s.IntegerField(),
-        help_text="ID вопросов чат-бота, которые задал студент",
     ),
     "student_characteristics": s.DictField(
         required=False,
         child=s.CharField(),
-        help_text='Ключ — slug характеристики, значение — slug опции. Пример: {"strength": "strong"}',
     ),
-    "selected_answer_id": s.IntegerField(required=False, help_text="ID выбранного варианта финального ответа"),
+    "selected_answer_id": s.IntegerField(required=False),
 })
 
 # Полная схема задачи для студента
@@ -976,7 +950,7 @@ TaskStudentSchemaSerializer = _make_serializer("TaskStudentSchema", {
     "questions":        QuestionInTaskSerializer(many=True),
     "answerOptions":    AnswerOptionInTaskSerializer(many=True),
 })
-_task_student_schema = TaskStudentSchemaSerializer()  # инстанс для одиночного использования
+_task_student_schema = TaskStudentSchemaSerializer()
 
 # ─── Student API ──────────────────────────────────────────────────────────────
 
@@ -997,7 +971,6 @@ class EducationTasksAPI(APIView):
         ]
         return ok(res)
 
-
 @extend_schema(
     tags=["Обучение"],
     summary="Проверить решение обучающей задачи (без сохранения попытки)",
@@ -1015,7 +988,6 @@ class EducationSubmitAPI(APIView, EvaluationMixin):
         task = get_object_or_404(Task, id=task_id)
         return ok(self._evaluate(task, request.data)['response'])
 
-
 @extend_schema(
     tags=["Контроль"],
     summary="Получить случайную задачу для контроля (уровень сложности 3 или 4)",
@@ -1030,7 +1002,6 @@ class ControlTaskAPI(APIView):
         if not t:
             return err("Нет доступных задач для контроля", status_code=status.HTTP_404_NOT_FOUND)
         return ok(TaskStudentSerializer(t).data)
-
 
 @extend_schema(
     tags=["Контроль"],
@@ -1087,11 +1058,9 @@ class UserProfileView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-
 @extend_schema(
     tags=["Контроль"],
     summary="Результат попытки студента — оценка, покраска, правильный ответ",
-    description="Студент видит только свои попытки. submission_id возвращается в ответе на submit.",
     responses={
         200: inline_serializer("StudentSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
         403: _err_response(),
@@ -1114,32 +1083,12 @@ class StudentSubmissionDetailAPI(APIView, EvaluationMixin):
         }
         return ok(self._evaluate(submission.task, data_to_compare)['response'])
 
-
 # ADMIN API
-
-AttemptItemSerializer = _make_serializer("AttemptItem", {
-    "number": s.IntegerField(help_text="Порядковый номер попытки"),
-    "id":     s.IntegerField(help_text="ID попытки (submission_id) для детального просмотра"),
-})
-
-StudentStatementSchemaSerializer = _make_serializer("StudentStatement", {
-    "student_fio":   s.CharField(help_text="Фамилия Имя студента"),
-    "group":         s.CharField(help_text="Учебная группа"),
-    "last_start":    s.CharField(help_text="Время начала последней попытки, формат HH:MM:SS DD.MM.YYYY"),
-    "last_end":      s.CharField(help_text="Время завершения последней попытки, формат HH:MM:SS DD.MM.YYYY"),
-    "last_spent":    s.CharField(help_text="Затраченное время на последнюю попытку"),
-    "last_grade":    s.CharField(help_text="Оценка за последнюю попытку"),
-    "last_category": s.CharField(help_text="Название категории задачи последней попытки"),
-    "attempts":      AttemptItemSerializer(many=True),
-})
 
 @extend_schema(
     tags=["Отчёты (Admin)"],
     summary="Сводная таблица: все студенты со сданными попытками",
-    responses={200: inline_serializer("AdminAllSubmissionsResponse", fields={
-        "ok":   s.BooleanField(),
-        "data": StudentStatementSchemaSerializer(many=True),
-    })}
+    responses={200: _ok_response(StudentStatementSerializer, many=True)}
 )
 class AdminAllSubmissionsAPI(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
@@ -1148,11 +1097,9 @@ class AdminAllSubmissionsAPI(APIView):
         students = Account.objects.filter(submission__isnull=False).distinct()
         return ok(StudentStatementSerializer(students, many=True).data)
 
-
 @extend_schema(
     tags=["Отчёты (Admin)"],
     summary="Детальный просмотр конкретной попытки студента",
-    description="Возвращает полный разбор: покраска студента vs эталон, выбранный и правильный ответ, вопросы, характеристики.",
     responses={
         200: inline_serializer("AdminSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
         404: _err_response(),
@@ -1171,3 +1118,175 @@ class AdminSubmissionDetailAPI(APIView, EvaluationMixin):
             "time_spent": submission.spent_time,
         }
         return ok(self._evaluate(submission.task, data_to_compare)['response'])
+
+# ─── Банк заданий ─────────────────────────────────────────────────────────────
+
+from django.db import transaction as db_transaction
+
+# Вложенные сериализаторы для комплексного создания задачи
+
+class _QuestionCreateSerializer(serializers.Serializer):
+    text       = serializers.CharField()
+    answer     = serializers.CharField()
+    is_correct = serializers.BooleanField(default=False)
+
+class _AnswerCreateSerializer(serializers.Serializer):
+    text       = serializers.CharField(max_length=255)
+    is_correct = serializers.BooleanField(default=False)
+
+class _MarkupItemCreateSerializer(serializers.Serializer):
+    start         = serializers.IntegerField()
+    end           = serializers.IntegerField()
+    category_slug = serializers.CharField()
+
+class TaskBankCreateSerializer(serializers.Serializer):
+    complexity              = serializers.IntegerField()
+    category                = serializers.IntegerField()
+    text                    = serializers.CharField()
+    condition               = serializers.CharField()
+    reference_markup        = _MarkupItemCreateSerializer(many=True, required=False, default=list)
+    correct_characteristics = serializers.DictField(child=serializers.CharField(), required=False, default=dict)
+    questions               = _QuestionCreateSerializer(many=True, required=False, default=list)
+    answers                 = _AnswerCreateSerializer(many=True, required=False, default=list)
+
+    def validate_complexity(self, value):
+        if not TaskComplexity.objects.filter(id=value).exists():
+            raise serializers.ValidationError(f"Уровень сложности с id={value} не найден")
+        return value
+
+    def validate_category(self, value):
+        if not TaskCategory.objects.filter(id=value).exists():
+            raise serializers.ValidationError(f"Категория с id={value} не найдена")
+        return value
+
+    def create(self, validated_data):
+        questions_data = validated_data.pop("questions", [])
+        answers_data   = validated_data.pop("answers", [])
+        with db_transaction.atomic():
+            task = Task.objects.create(
+                complexity_id           = validated_data["complexity"],
+                category_id             = validated_data["category"],
+                text                    = validated_data["text"],
+                condition               = validated_data["condition"],
+                reference_markup        = validated_data.get("reference_markup", []),
+                correct_characteristics = validated_data.get("correct_characteristics", {}),
+            )
+            TaskQuestion.objects.bulk_create([TaskQuestion(task=task, **q) for q in questions_data])
+            TaskAnswer.objects.bulk_create([TaskAnswer(task=task, **a) for a in answers_data])
+        return task
+
+
+def _task_detail_data(task):
+    return {
+        "id":                      task.id,
+        "complexity_id":           task.complexity.id,
+        "complexity_name":         task.complexity.name,
+        "category_id":             task.category.id,
+        "category_name":           task.category.name,
+        "text":                    task.text,
+        "condition":               task.condition,
+        "reference_markup":        task.reference_markup,
+        "correct_characteristics": task.correct_characteristics,
+        "questions": [
+            {"id": q.id, "text": q.text, "answer": q.answer, "is_correct": q.is_correct}
+            for q in task.questions.all()
+        ],
+        "answers": [
+            {"id": a.id, "text": a.text, "is_correct": a.is_correct}
+            for a in task.answers.all()
+        ],
+    }
+
+
+@extend_schema(tags=["Банк заданий (Admin)"], summary="Список задач по категориям")
+class TaskBankListView(APIView):
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def get(self, request):
+        categories = TaskCategory.objects.prefetch_related("tasks__complexity").all()
+        result = [
+            {
+                "category_id":   cat.id,
+                "category_slug": cat.slug,
+                "category_name": cat.name,
+                "tasks": [
+                    {
+                        "id":            t.id,
+                        "complexity":    t.complexity.name,
+                        "complexity_id": t.complexity.id,
+                        "task_category": cat.name,
+                        "task_text":     t.text,
+                    }
+                    for t in cat.tasks.select_related("complexity").all()
+                ],
+            }
+            for cat in categories
+        ]
+        return ok(result)
+
+
+@extend_schema(tags=["Банк заданий (Admin)"], summary="Детальный просмотр задачи для редактирования")
+class TaskBankDetailView(APIView):
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def get(self, request, pk):
+        task = get_object_or_404(
+            Task.objects.select_related("complexity", "category")
+                        .prefetch_related("questions", "answers"),
+            pk=pk
+        )
+        return ok(_task_detail_data(task))
+
+
+@extend_schema(
+    tags=["Банк заданий (Admin)"],
+    summary="Комплексное создание задачи с вопросами и ответами",
+    request=TaskBankCreateSerializer,
+)
+class TaskBankCreateView(APIView):
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def post(self, request):
+        serializer = TaskBankCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return err("Неверные данные", _serializer_hint(serializer.errors))
+        task = serializer.save()
+        task = Task.objects.select_related("complexity", "category") \
+                           .prefetch_related("questions", "answers") \
+                           .get(pk=task.pk)
+        return created(_task_detail_data(task))
+
+
+@extend_schema(tags=["Банк заданий (Admin)"], summary="Конфиг формы создания задачи")
+class CategoryConfigFormView(APIView):
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def get(self, request):
+        categories = TaskCategory.objects.prefetch_related(
+            "markup_buttons__color_markup",
+            "markup_buttons__options",
+            "tasks__answers",
+        ).all()
+        result = []
+        for cat in categories:
+            first_task = cat.tasks.prefetch_related("answers").first()
+            answer_options = (
+                [{"id": a.id, "text": a.text} for a in first_task.answers.all()]
+                if first_task else []
+            )
+            result.append({
+                "id":   cat.id,
+                "slug": cat.slug,
+                "name": cat.name,
+                "characteristics": [
+                    {
+                        "id":      m.slug,
+                        "name":    m.name,
+                        "color":   m.color_markup.style,
+                        "options": [{"id": opt.slug, "name": opt.name} for opt in m.options.all()],
+                    }
+                    for m in cat.markup_buttons.all()
+                ],
+                "answerOptions": answer_options,
+            })
+        return ok(result)

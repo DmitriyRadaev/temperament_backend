@@ -105,6 +105,14 @@ urlpatterns = [
     path("api/admin/submissions/all/",      views.AdminAllSubmissionsAPI.as_view()),
     path("api/admin/submissions/<int:pk>/", views.AdminSubmissionDetailAPI.as_view()),
 
+    # Банк заданий
+    path("api/task-bank/",             views.TaskBankListView.as_view()),
+    path("api/task-bank/create/",      views.TaskBankCreateView.as_view()),
+    path("api/task-bank/<int:pk>/",    views.TaskBankDetailView.as_view()),
+
+    # Конфиг формы создания задачи
+    path("api/category-config/form/",  views.CategoryConfigFormView.as_view()),
+
     # Swagger
     path('api/schema/',            SpectacularAPIView.as_view(),                         name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'),    name='swagger-ui'),
