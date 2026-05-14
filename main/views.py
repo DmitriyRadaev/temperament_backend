@@ -1117,10 +1117,29 @@ class StudentSubmissionDetailAPI(APIView, EvaluationMixin):
 
 # ADMIN API
 
+AttemptItemSerializer = _make_serializer("AttemptItem", {
+    "number": s.IntegerField(help_text="Порядковый номер попытки"),
+    "id":     s.IntegerField(help_text="ID попытки (submission_id) для детального просмотра"),
+})
+
+StudentStatementSchemaSerializer = _make_serializer("StudentStatement", {
+    "student_fio":   s.CharField(help_text="Фамилия Имя студента"),
+    "group":         s.CharField(help_text="Учебная группа"),
+    "last_start":    s.CharField(help_text="Время начала последней попытки, формат HH:MM:SS DD.MM.YYYY"),
+    "last_end":      s.CharField(help_text="Время завершения последней попытки, формат HH:MM:SS DD.MM.YYYY"),
+    "last_spent":    s.CharField(help_text="Затраченное время на последнюю попытку"),
+    "last_grade":    s.CharField(help_text="Оценка за последнюю попытку"),
+    "last_category": s.CharField(help_text="Название категории задачи последней попытки"),
+    "attempts":      AttemptItemSerializer(many=True),
+})
+
 @extend_schema(
     tags=["Отчёты (Admin)"],
     summary="Сводная таблица: все студенты со сданными попытками",
-    responses={200: _ok_response(StudentStatementSerializer, many=True)}
+    responses={200: inline_serializer("AdminAllSubmissionsResponse", fields={
+        "ok":   s.BooleanField(),
+        "data": StudentStatementSchemaSerializer(many=True),
+    })}
 )
 class AdminAllSubmissionsAPI(APIView):
     permission_classes = [IsAdminOrSuperAdmin]

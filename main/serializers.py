@@ -220,10 +220,11 @@ class StudentStatementSerializer(serializers.ModelSerializer):
     student_fio = serializers.SerializerMethodField()
     group = serializers.SerializerMethodField()
 
-    last_start = serializers.SerializerMethodField()
-    last_end = serializers.SerializerMethodField()
-    last_spent = serializers.SerializerMethodField()
-    last_grade = serializers.SerializerMethodField()
+    last_start    = serializers.SerializerMethodField()
+    last_end      = serializers.SerializerMethodField()
+    last_spent    = serializers.SerializerMethodField()
+    last_grade    = serializers.SerializerMethodField()
+    last_category = serializers.SerializerMethodField()
 
     attempts = serializers.SerializerMethodField()
 
@@ -231,7 +232,7 @@ class StudentStatementSerializer(serializers.ModelSerializer):
         model = Account
         fields = [
             'student_fio', 'group',
-            'last_start', 'last_end', 'last_spent', 'last_grade',
+            'last_start', 'last_end', 'last_spent', 'last_grade', 'last_category',
             'attempts'
         ]
 
@@ -259,6 +260,12 @@ class StudentStatementSerializer(serializers.ModelSerializer):
     def get_last_grade(self, obj):
         last = self._get_sorted_attempts(obj).last()
         return last.grade if last else "—"
+
+    def get_last_category(self, obj):
+        last = self._get_sorted_attempts(obj).last()
+        if last and last.task and last.task.category:
+            return last.task.category.name
+        return "—"
 
     def get_attempts(self, obj):
         return [
