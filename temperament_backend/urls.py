@@ -105,13 +105,17 @@ urlpatterns = [
     path("api/admin/submissions/all/",      views.AdminAllSubmissionsAPI.as_view()),
     path("api/admin/submissions/<int:pk>/", views.AdminSubmissionDetailAPI.as_view()),
 
-    # Банк заданий
-    path("api/task-bank/",             views.TaskBankListView.as_view()),
-    path("api/task-bank/create/",      views.TaskBankCreateView.as_view()),
-    path("api/task-bank/<int:pk>/",    views.TaskBankDetailView.as_view()),
+    # Банк заданий — список
+    path("api/task-bank/",                  views.TaskBankListView.as_view()),
 
-    # Конфиг формы создания задачи
-    path("api/category-config/form/",  views.CategoryConfigFormView.as_view()),
+    # TaskForm API (имена как ожидает фронт)
+    path("api/task-categories/",            views.TaskCategoriesView.as_view()),
+    path("api/tasks/<int:pk>/",             views.TaskFormDetailView.as_view()),
+    path("api/tasks/",                      views.TaskFormCreateView.as_view()),
+    path("api/tasks/<int:pk>/update/",      views.TaskFormUpdateView.as_view()),
+
+    # Конфиг формы создания задачи (старый)
+    path("api/category-config/form/",       views.TaskCategoriesView.as_view()),
 
     # Swagger
     path('api/schema/',            SpectacularAPIView.as_view(),                         name='schema'),
