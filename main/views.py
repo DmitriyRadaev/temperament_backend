@@ -34,18 +34,18 @@ def custom_exception_handler(exc, context):
         message = str(data[0]) if data else "Ошибка"
     else:
         message = str(data)
-    drf_response.data = {"ok": False, "error": message}
+    drf_response.data = {"error": message}
     return drf_response
 
 
 def ok(data=None, status_code=status.HTTP_200_OK):
-    return Response({"ok": True, "data": data}, status=status_code)
+    return Response(data, status=status_code)
 
 def created(data=None):
-    return ok(data, status_code=status.HTTP_201_CREATED)
+    return Response(data, status=status.HTTP_201_CREATED)
 
 def err(message: str, details=None, status_code=status.HTTP_400_BAD_REQUEST):
-    body = {"ok": False, "error": message}
+    body = {"error": message}
     if details is not None and settings.DEBUG:
         body["details"] = details
     return Response(body, status=status_code)
@@ -62,21 +62,24 @@ def _serializer_hint(errors: dict) -> str:
 def _ok_response(serializer_class, many=False):
     if many:
         return serializer_class(many=True)
-    return inline_serializer(
-        name=f"Ok{serializer_class.__name__}",
-        fields={"ok": s.BooleanField(), "data": serializer_class()}
-    )
+    return serializer_class()
 
+_err_counter = 0
 def _err_response():
+    global _err_counter
+    _err_counter += 1
     return inline_serializer(
-        name="ErrorResponse",
-        fields={"ok": s.BooleanField(), "error": s.CharField()}
+        name=f"ErrorResponse{_err_counter}",
+        fields={"error": s.CharField()}
     )
 
+_deleted_counter = 0
 def _deleted_response():
+    global _deleted_counter
+    _deleted_counter += 1
     return inline_serializer(
-        name="DeletedResponse",
-        fields={"ok": s.BooleanField(), "data": inline_serializer(name="DeletedData", fields={"detail": s.CharField()})}
+        name=f"DeletedResponse{_deleted_counter}",
+        fields={"detail": s.CharField()}
     )
 
 
@@ -91,7 +94,7 @@ def get_user_tokens(user):
     tags=["Auth"],
     request=inline_serializer("LoginRequest", fields={"email": s.EmailField(), "password": s.CharField()}),
     responses={
-        200: inline_serializer("LoginResponse", fields={"ok": s.BooleanField(), "data": inline_serializer("LoginData", fields={"detail": s.CharField()})}),
+        200: inline_serializer("LoginData", fields={"detail": s.CharField()}),
         400: _err_response(),
         401: _err_response(),
     }
@@ -107,7 +110,7 @@ def loginView(request):
     if not user:
         return err("Неверный email или пароль", status_code=status.HTTP_401_UNAUTHORIZED)
     tokens_dict = get_user_tokens(user)
-    res = Response({"ok": True, "data": {"detail": "Вход выполнен успешно"}})
+    res = Response({"detail": "Вход выполнен успешно"})
     res.set_cookie(key=settings.SIMPLE_JWT['AUTH_COOKIE'], value=tokens_dict["access_token"],
                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
                    secure=settings.SIMPLE_JWT.get('AUTH_COOKIE_SECURE', False),
@@ -129,7 +132,7 @@ def loginView(request):
 @extend_schema(
     tags=["Auth"],
     request=None,
-    responses={200: inline_serializer("LogoutResponse", fields={"ok": s.BooleanField(), "data": inline_serializer("LogoutData", fields={"detail": s.CharField()})})}
+    responses={200: inline_serializer("LogoutData", fields={"detail": s.CharField()})}
 )
 @csrf_exempt
 @decorators.api_view(["POST"])
@@ -141,7 +144,7 @@ def logoutView(request):
             tokens.RefreshToken(refresh_token).blacklist()
     except Exception:
         pass
-    res = Response({"ok": True, "data": {"detail": "Выход выполнен успешно"}}, status=status.HTTP_200_OK)
+    res = Response({"detail": "Выход выполнен успешно"}, status=status.HTTP_200_OK)
     res.delete_cookie(key=settings.SIMPLE_JWT['AUTH_COOKIE'], path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'), samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'))
     res.delete_cookie(key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'], path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'), samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'))
     res.delete_cookie(key="user_role", path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'), samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'))
@@ -983,10 +986,7 @@ _task_student_schema = TaskStudentSchemaSerializer()  # инстанс для о
 @extend_schema(
     tags=["Обучение"],
     summary="Получить задачи для обучения (по одной на каждый уровень сложности 1–4)",
-    responses={200: inline_serializer("EducationTasksResponse", fields={
-        "ok":   s.BooleanField(),
-        "data": TaskStudentSchemaSerializer(many=True),
-    })}
+    responses={200: TaskStudentSchemaSerializer(many=True),}
 )
 class EducationTasksAPI(APIView):
     def get(self, request):
@@ -1003,7 +1003,7 @@ class EducationTasksAPI(APIView):
     summary="Проверить решение обучающей задачи (без сохранения попытки)",
     request=_submit_request,
     responses={
-        200: inline_serializer("EducationSubmitResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
+        200: _evaluation_result,
         400: _err_response(),
     }
 )
@@ -1020,7 +1020,7 @@ class EducationSubmitAPI(APIView, EvaluationMixin):
     tags=["Контроль"],
     summary="Получить случайную задачу для контроля (уровень сложности 3 или 4)",
     responses={
-        200: inline_serializer("ControlTaskResponse", fields={"ok": s.BooleanField(), "data": _task_student_schema}),
+        200: _task_student_schema,
         404: _err_response(),
     }
 )
@@ -1037,7 +1037,7 @@ class ControlTaskAPI(APIView):
     summary="Отправить решение контрольной задачи (сохраняется, макс. 3 попытки)",
     request=_submit_request,
     responses={
-        200: inline_serializer("ControlSubmitResponse", fields={"ok": s.BooleanField(), "data": _submit_result}),
+        200: _submit_result,
         400: _err_response(),
     }
 )
@@ -1093,7 +1093,7 @@ class UserProfileView(generics.RetrieveAPIView):
     summary="Результат попытки студента — оценка, покраска, правильный ответ",
     description="Студент видит только свои попытки. submission_id возвращается в ответе на submit.",
     responses={
-        200: inline_serializer("StudentSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
+        200: _evaluation_result,
         403: _err_response(),
         404: _err_response(),
     }
@@ -1135,7 +1135,7 @@ class AdminAllSubmissionsAPI(APIView):
     summary="Детальный просмотр конкретной попытки студента",
     description="Возвращает полный разбор: покраска студента vs эталон, выбранный и правильный ответ, вопросы, характеристики.",
     responses={
-        200: inline_serializer("AdminSubmissionDetailResponse", fields={"ok": s.BooleanField(), "data": _evaluation_result}),
+        200: _evaluation_result,
         404: _err_response(),
     }
 )
@@ -1221,12 +1221,17 @@ class _MarkupInSerializer(serializers.Serializer):
     end           = serializers.IntegerField()
     category_slug = serializers.CharField()
 
+class _AnswerOptionInSerializer(serializers.Serializer):
+    id   = serializers.IntegerField()
+    text = serializers.CharField()
+
 class TaskFormCreateSerializer(serializers.Serializer):
     taskCategory            = serializers.CharField()
     complexity              = serializers.CharField()
     taskText                = serializers.CharField()
     correctCharacteristics  = serializers.DictField(child=serializers.CharField(), required=False, default=dict)
     textMarkup              = _MarkupInSerializer(many=True, required=False, default=list)
+    answerOptions           = _AnswerOptionInSerializer(many=True, required=False, default=list)
     correctAnswerId         = serializers.IntegerField(required=False, allow_null=True, default=None)
     questions               = _QuestionInSerializer(many=True, required=False, default=list)
 
@@ -1301,10 +1306,7 @@ def _build_task_response(task):
 @extend_schema(
     tags=["Банк заданий (Admin)"],
     summary="GET /api/task-categories — конфиг всех категорий для формы создания задачи",
-    responses={200: inline_serializer("TaskCategoriesResponse", fields={
-        "ok":   s.BooleanField(),
-        "data": _CategoryConfigSchema(many=True),
-    })}
+    responses={200: _CategoryConfigSchema(many=True),}
 )
 class TaskCategoriesView(APIView):
     permission_classes = [IsAdminOrSuperAdmin]
@@ -1344,10 +1346,7 @@ class TaskCategoriesView(APIView):
     tags=["Банк заданий (Admin)"],
     summary="GET /api/tasks/:taskId — задача для формы редактирования",
     responses={
-        200: inline_serializer("TaskFormDetailResponse", fields={
-            "ok":   s.BooleanField(),
-            "data": _TaskDetailSchema(),
-        }),
+        200: _TaskDetailSchema(),
         404: _err_response(),
     }
 )
@@ -1368,10 +1367,7 @@ class TaskFormDetailView(APIView):
     summary="POST /api/tasks — создать задачу",
     request=TaskFormCreateSerializer,
     responses={
-        201: inline_serializer("TaskFormCreateResponse", fields={
-            "ok":   s.BooleanField(),
-            "data": _TaskDetailSchema(),
-        }),
+        201: _TaskDetailSchema(),
         400: _err_response(),
     }
 )
@@ -1405,8 +1401,23 @@ class TaskFormCreateView(APIView):
                 )
                 for q in questions_data
             ])
-            if correct_answer_id:
-                TaskAnswer.objects.filter(id=correct_answer_id).update(is_correct=True)
+
+            # Создаём TaskAnswer из answerOptions пришедших от фронта
+            answer_options_data = data.get("answerOptions", [])
+            if answer_options_data:
+                # Находим текст правильного ответа по id
+                correct_text = next(
+                    (a["text"] for a in answer_options_data if a["id"] == correct_answer_id),
+                    None
+                )
+                TaskAnswer.objects.bulk_create([
+                    TaskAnswer(
+                        task=task,
+                        text=a["text"],
+                        is_correct=(a["text"] == correct_text),
+                    )
+                    for a in answer_options_data
+                ])
 
         task = Task.objects.select_related("complexity", "category") \
                            .prefetch_related("questions", "answers") \
@@ -1419,10 +1430,7 @@ class TaskFormCreateView(APIView):
     summary="PUT /api/tasks/:taskId — обновить задачу (вопросы пересоздаются целиком)",
     request=TaskFormCreateSerializer,
     responses={
-        200: inline_serializer("TaskFormUpdateResponse", fields={
-            "ok":   s.BooleanField(),
-            "data": _TaskDetailSchema(),
-        }),
+        200: _TaskDetailSchema(),
         400: _err_response(),
         404: _err_response(),
     }
@@ -1460,9 +1468,26 @@ class TaskFormUpdateView(APIView):
                 for q in questions_data
             ])
 
-            if correct_answer_id:
+            # Обновляем TaskAnswer: пересоздаём по свежим answerOptions
+            answer_options_data = data.get("answerOptions", [])
+            if answer_options_data:
+                task.answers.all().delete()
+                correct_text = next(
+                    (a["text"] for a in answer_options_data if a["id"] == correct_answer_id),
+                    None
+                )
+                TaskAnswer.objects.bulk_create([
+                    TaskAnswer(
+                        task=task,
+                        text=a["text"],
+                        is_correct=(a["text"] == correct_text),
+                    )
+                    for a in answer_options_data
+                ])
+            elif correct_answer_id:
+                # answerOptions не пришли — меняем is_correct на существующих ответах напрямую
                 task.answers.all().update(is_correct=False)
-                TaskAnswer.objects.filter(id=correct_answer_id).update(is_correct=True)
+                task.answers.filter(id=correct_answer_id).update(is_correct=True)
 
         task = Task.objects.select_related("complexity", "category") \
                            .prefetch_related("questions", "answers") \
@@ -1491,10 +1516,7 @@ _TaskBankGroupSchema = type("TaskBankGroupSchema", (_S,), {
 @extend_schema(
     tags=["Банк заданий (Admin)"],
     summary="Список всех задач, сгруппированных по категориям",
-    responses={200: inline_serializer("TaskBankListResponse", fields={
-        "ok":   s.BooleanField(),
-        "data": _TaskBankGroupSchema(many=True),
-    })}
+    responses={200: _TaskBankGroupSchema(many=True),}
 )
 class TaskBankListView(APIView):
     permission_classes = [IsAdminOrSuperAdmin]

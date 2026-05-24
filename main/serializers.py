@@ -1,5 +1,6 @@
 from rest_framework import serializers, generics
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema_field
 from .models import *
 
 Account = get_user_model()
@@ -236,37 +237,45 @@ class StudentStatementSerializer(serializers.ModelSerializer):
             'attempts'
         ]
 
+    @extend_schema_field(serializers.CharField())
     def get_student_fio(self, obj):
         return f"{obj.surname} {obj.name}"
 
+    @extend_schema_field(serializers.CharField())
     def get_group(self, obj):
         return obj.student_profile.group if hasattr(obj, 'student_profile') else "N/A"
 
     def _get_sorted_attempts(self, obj):
         return obj.submission_set.all().order_by('created_at')
 
+    @extend_schema_field(serializers.CharField())
     def get_last_start(self, obj):
         last = self._get_sorted_attempts(obj).last()
         return last.start_time.strftime("%H:%M:%S %d.%m.%Y") if last and last.start_time else "—"
 
+    @extend_schema_field(serializers.CharField())
     def get_last_end(self, obj):
         last = self._get_sorted_attempts(obj).last()
         return last.created_at.strftime("%H:%M:%S %d.%m.%Y") if last else "—"
 
+    @extend_schema_field(serializers.CharField())
     def get_last_spent(self, obj):
         last = self._get_sorted_attempts(obj).last()
         return last.spent_time if last else "—"
 
+    @extend_schema_field(serializers.CharField())
     def get_last_grade(self, obj):
         last = self._get_sorted_attempts(obj).last()
         return last.grade if last else "—"
 
+    @extend_schema_field(serializers.CharField())
     def get_last_category(self, obj):
         last = self._get_sorted_attempts(obj).last()
         if last and last.task and last.task.category:
             return last.task.category.name
         return "—"
 
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_attempts(self, obj):
         return [
             {"number": i + 1, "id": att.id}

@@ -1,6 +1,20 @@
 from rest_framework_simplejwt import authentication as jwt_authentication
 from django.conf import settings
 from rest_framework import authentication, exceptions as rest_exceptions
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
+
+
+class CustomAuthenticationScheme(OpenApiAuthenticationExtension):
+    target_class = "main.authenticate.CustomAuthentication"
+    name = "cookieAuth"
+
+    def get_security_definition(self, auto_schema):
+        return {
+            "type": "apiKey",
+            "in": "cookie",
+            "name": settings.SIMPLE_JWT.get("AUTH_COOKIE", "access"),
+            "description": "JWT токен в HttpOnly cookie",
+        }
 
 
 def enforce_csrf(request):
