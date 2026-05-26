@@ -1205,7 +1205,7 @@ _TaskDetailSchema = type("TaskDetailSchema", (_S,), {
     "correctCharacteristics": s.DictField(child=s.CharField()),
     "textMarkup":            _MarkupItemSchema(many=True),
     "answerOptions":         _AnswerOptionSchema(many=True),
-    "correctAnswerId":       s.IntegerField(allow_null=True),
+
     "questions":             _QuestionOutSchema(many=True),
 })
 
@@ -1222,8 +1222,9 @@ class _MarkupInSerializer(serializers.Serializer):
     category_slug = serializers.CharField()
 
 class _AnswerOptionInSerializer(serializers.Serializer):
-    id   = serializers.IntegerField()
-    text = serializers.CharField()
+    id        = serializers.IntegerField()
+    text      = serializers.CharField()
+    isCorrect = serializers.BooleanField(default=False)
 
 class TaskFormCreateSerializer(serializers.Serializer):
     taskCategory            = serializers.CharField()
@@ -1232,7 +1233,6 @@ class TaskFormCreateSerializer(serializers.Serializer):
     correctCharacteristics  = serializers.DictField(child=serializers.CharField(), required=False, default=dict)
     textMarkup              = _MarkupInSerializer(many=True, required=False, default=list)
     answerOptions           = _AnswerOptionInSerializer(many=True, required=False, default=list)
-    correctAnswerId         = serializers.IntegerField(required=False, allow_null=True, default=None)
     questions               = _QuestionInSerializer(many=True, required=False, default=list)
 
     def validate_taskCategory(self, value):
@@ -1278,8 +1278,7 @@ def _build_task_response(task):
     ]
 
     answers = list(task.answers.all())
-    answer_options = [{"id": a.id, "text": a.text} for a in answers]
-    correct_answer = next((a for a in answers if a.is_correct), None)
+    answer_options = [{"id": a.id, "text": a.text, "isCorrect": a.is_correct} for a in answers]
 
     return {
         "id":                     str(task.id),
@@ -1290,7 +1289,6 @@ def _build_task_response(task):
         "correctCharacteristics": task.correct_characteristics,
         "textMarkup":             task.reference_markup,
         "answerOptions":          answer_options,
-        "correctAnswerId":        correct_answer.id if correct_answer else None,
         "questions": [
             {
                 "id":       str(q.id),
@@ -1381,7 +1379,6 @@ class TaskFormCreateView(APIView):
 
         data = serializer.validated_data
         questions_data  = data.pop("questions", [])
-        correct_answer_id = data.pop("correctAnswerId", None)
 
         with db_transaction.atomic():
             task = Task.objects.create(
@@ -1402,23 +1399,17 @@ class TaskFormCreateView(APIView):
                 for q in questions_data
             ])
 
-            # Создаём TaskAnswer из answerOptions пришедших от фронта
+            # Создаём TaskAnswer из answerOptions
             answer_options_data = data.get("answerOptions", [])
             if answer_options_data:
-                # Находим текст правильного ответа по id
-                correct_text = next(
-                    (a["text"] for a in answer_options_data if a["id"] == correct_answer_id),
-                    None
-                )
                 TaskAnswer.objects.bulk_create([
                     TaskAnswer(
                         task=task,
                         text=a["text"],
-                        is_correct=(a["text"] == correct_text),
+                        is_correct=a.get("isCorrect", False),
                     )
                     for a in answer_options_data
                 ])
-
         task = Task.objects.select_related("complexity", "category") \
                            .prefetch_related("questions", "answers") \
                            .get(pk=task.pk)
@@ -1446,7 +1437,6 @@ class TaskFormUpdateView(APIView):
 
         data = serializer.validated_data
         questions_data    = data.pop("questions", [])
-        correct_answer_id = data.pop("correctAnswerId", None)
 
         with db_transaction.atomic():
             task.category_id             = data["taskCategory"]
@@ -1468,27 +1458,18 @@ class TaskFormUpdateView(APIView):
                 for q in questions_data
             ])
 
-            # Обновляем TaskAnswer: пересоздаём по свежим answerOptions
+            # Пересоздаём ответы если пришли
             answer_options_data = data.get("answerOptions", [])
             if answer_options_data:
                 task.answers.all().delete()
-                correct_text = next(
-                    (a["text"] for a in answer_options_data if a["id"] == correct_answer_id),
-                    None
-                )
                 TaskAnswer.objects.bulk_create([
                     TaskAnswer(
                         task=task,
                         text=a["text"],
-                        is_correct=(a["text"] == correct_text),
+                        is_correct=a.get("isCorrect", False),
                     )
                     for a in answer_options_data
                 ])
-            elif correct_answer_id:
-                # answerOptions не пришли — меняем is_correct на существующих ответах напрямую
-                task.answers.all().update(is_correct=False)
-                task.answers.filter(id=correct_answer_id).update(is_correct=True)
-
         task = Task.objects.select_related("complexity", "category") \
                            .prefetch_related("questions", "answers") \
                            .get(pk=task.pk)
