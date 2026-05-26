@@ -126,10 +126,10 @@ AUTH_USER_MODEL = 'main.Account'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'http://172.26.4.9/',
-    'http://172.26.4.9/logic-trainer/',
-    'http://172.26.4.9:3000/logic-trainer/',
-    'http://tips.samsmu.ru/logic-trainer/'
+    'http://172.26.4.9',
+    'http://172.26.4.9:3000',
+    'http://172.26.4.9:8082',
+    'https://tips.samsmu.ru',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -137,11 +137,10 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTP_ONLY = False
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
-    'http://172.26.4.9/logic-trainer/',
-    'http://172.26.4.9/',
-    'http://172.26.4.9:3000/logic-trainer/',
-    'http://tips.samsmu.ru/logic-trainer/'
-
+    'http://172.26.4.9',
+    'http://172.26.4.9:3000',
+    'http://172.26.4.9:8082',
+    'https://tips.samsmu.ru',
 ]
 
 CORS_EXPOSE_HEADERS = ['Content-Type',"X-CSRF-Token"]
