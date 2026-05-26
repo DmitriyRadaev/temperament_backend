@@ -27,7 +27,7 @@ services:
     env_file:
       - .env
 
-  # Сервис PgAdmin
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin_container
