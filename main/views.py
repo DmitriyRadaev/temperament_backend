@@ -726,6 +726,13 @@ class SubmissionDestroyView(APIView):
 
 # EVALUATION MIXIN
 
+def _slug_to_name(markup, slug):
+    if not slug:
+        return slug
+    option = markup.options.filter(slug=slug).first()
+    return option.name if option else slug
+
+
 class EvaluationMixin:
     def _evaluate(self, task, data):
         ref_all = task.reference_markup
@@ -778,7 +785,7 @@ class EvaluationMixin:
         else:
             grade = "Попробуйте еще раз"
 
-        markups = CategoryMarkup.objects.filter(task_category=task.category).select_related('color_markup')
+        markups = CategoryMarkup.objects.filter(task_category=task.category).select_related('color_markup').prefetch_related('options')
         styles = {m.slug: m.color_markup.style for m in markups}
         stu_chars = data.get('student_characteristics', {})
 
@@ -817,8 +824,8 @@ class EvaluationMixin:
                     {
                         "name": m.name,
                         "color": m.color_markup.style,
-                        "studentCharacteristics": stu_chars.get(m.slug),
-                        "correctCharacteristics": task.correct_characteristics.get(m.slug),
+                        "studentCharacteristics": _slug_to_name(m, stu_chars.get(m.slug)),
+                        "correctCharacteristics": _slug_to_name(m, task.correct_characteristics.get(m.slug)),
                     }
                     for m in markups
                 ],
