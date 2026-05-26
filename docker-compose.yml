@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: _docker/app/Dockerfile
-    container_name: django_app
+    container_name: temperament_web
     command: gunicorn temperament_backend.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - static_volume:/app/static
@@ -17,7 +17,7 @@ services:
 
   db:
     image: postgres:15
-    container_name: postgres_db
+    container_name: temperament_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -27,10 +27,9 @@ services:
     env_file:
       - .env
 
-
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin_container
+    container_name: temperament_pgadmin
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
@@ -42,7 +41,7 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: nginx_server
+    container_name: temperament_nginx
     ports:
       - "8082:80"
     volumes:
