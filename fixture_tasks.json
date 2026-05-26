@@ -1,0 +1,2227 @@
+[
+  {
+    "model": "main.taskcomplexity",
+    "pk": 1,
+    "fields": {
+      "name": "А+Б− (необходимые и достаточные данные)",
+      "level": 1
+    }
+  },
+  {
+    "model": "main.taskcomplexity",
+    "pk": 2,
+    "fields": {
+      "name": "А+Б+ (необходимые данные с избыточными)",
+      "level": 2
+    }
+  },
+  {
+    "model": "main.taskcomplexity",
+    "pk": 3,
+    "fields": {
+      "name": "А−Б− (недостаточные данные без избыточных)",
+      "level": 3
+    }
+  },
+  {
+    "model": "main.taskcomplexity",
+    "pk": 4,
+    "fields": {
+      "name": "А−Б+ (недостаточные данные с избыточными)",
+      "level": 4
+    }
+  },
+  {
+    "model": "main.taskcategory",
+    "pk": 1,
+    "fields": {
+      "name": "Темперамент",
+      "slug": "temperament"
+    }
+  },
+  {
+    "model": "main.taskcategory",
+    "pk": 2,
+    "fields": {
+      "name": "Экономическая задача",
+      "slug": "economics"
+    }
+  },
+  {
+    "model": "main.categoryconfig",
+    "pk": 1,
+    "fields": {
+      "category": 1,
+      "button_title": "Определение темперамента",
+      "short_description": "Определите тип темперамента по классификации И.П. Павлова",
+      "detail_description": "Задачи на определение типа высшей нервной деятельности (темперамента) по классификации И.П. Павлова: холерик, сангвиник, флегматик, меланхолик. Анализируются характеристики нервной системы: сила, уравновешенность, подвижность."
+    }
+  },
+  {
+    "model": "main.categoryconfig",
+    "pk": 2,
+    "fields": {
+      "category": 2,
+      "button_title": "Экономическая задача",
+      "short_description": "Рассчитайте показатель рентабельности аптечной организации",
+      "detail_description": "Экономические задачи на расчёт рентабельности аптечной организации. Необходимо определить нужные данные, отфильтровать лишние, запросить недостающие и выбрать правильный ответ."
+    }
+  },
+  {
+    "model": "main.colorsmarkup",
+    "pk": 1,
+    "fields": {
+      "name": "Синий",
+      "style": "bg-blue-200"
+    }
+  },
+  {
+    "model": "main.colorsmarkup",
+    "pk": 2,
+    "fields": {
+      "name": "Жёлтый",
+      "style": "bg-yellow-200"
+    }
+  },
+  {
+    "model": "main.colorsmarkup",
+    "pk": 3,
+    "fields": {
+      "name": "Зелёный",
+      "style": "bg-green-200"
+    }
+  },
+  {
+    "model": "main.colorsmarkup",
+    "pk": 4,
+    "fields": {
+      "name": "Красный",
+      "style": "bg-red-200"
+    }
+  },
+  {
+    "model": "main.categorymarkup",
+    "pk": 1,
+    "fields": {
+      "name": "Сила нервной системы",
+      "slug": "strength",
+      "color_markup": 1,
+      "task_category": 1
+    }
+  },
+  {
+    "model": "main.categorymarkup",
+    "pk": 2,
+    "fields": {
+      "name": "Уравновешенность",
+      "slug": "balance",
+      "color_markup": 2,
+      "task_category": 1
+    }
+  },
+  {
+    "model": "main.categorymarkup",
+    "pk": 3,
+    "fields": {
+      "name": "Подвижность нервной системы",
+      "slug": "mobility",
+      "color_markup": 3,
+      "task_category": 1
+    }
+  },
+  {
+    "model": "main.categorymarkup",
+    "pk": 4,
+    "fields": {
+      "name": "Объём реализации в розничных ценах",
+      "slug": "sales-volume",
+      "color_markup": 1,
+      "task_category": 2
+    }
+  },
+  {
+    "model": "main.categorymarkup",
+    "pk": 5,
+    "fields": {
+      "name": "Размер торговых наложений на реализованные товары",
+      "slug": "trade-markup",
+      "color_markup": 2,
+      "task_category": 2
+    }
+  },
+  {
+    "model": "main.categorymarkup",
+    "pk": 6,
+    "fields": {
+      "name": "Сумма расходов на продажу",
+      "slug": "expenses",
+      "color_markup": 3,
+      "task_category": 2
+    }
+  },
+  {
+    "model": "main.categorymarkup",
+    "pk": 7,
+    "fields": {
+      "name": "Лишние данные",
+      "slug": "useless",
+      "color_markup": 4,
+      "task_category": 2
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 1,
+    "fields": {
+      "category_markup": 1,
+      "name": "Сильный",
+      "slug": "strong"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 2,
+    "fields": {
+      "category_markup": 1,
+      "name": "Слабый",
+      "slug": "weak"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 3,
+    "fields": {
+      "category_markup": 2,
+      "name": "Уравновешенный",
+      "slug": "balanced"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 4,
+    "fields": {
+      "category_markup": 2,
+      "name": "Неуравновешенный",
+      "slug": "unbalanced"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 5,
+    "fields": {
+      "category_markup": 3,
+      "name": "Подвижный",
+      "slug": "mobile"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 6,
+    "fields": {
+      "category_markup": 3,
+      "name": "Малоподвижный (инертный)",
+      "slug": "inert"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 7,
+    "fields": {
+      "category_markup": 3,
+      "name": "Сдержанный",
+      "slug": "restrained"
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 1,
+    "fields": {
+      "task": 1,
+      "text": "Холерический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 2,
+    "fields": {
+      "task": 1,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 3,
+    "fields": {
+      "task": 1,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 4,
+    "fields": {
+      "task": 1,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 5,
+    "fields": {
+      "task": 2,
+      "text": "Холерический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 6,
+    "fields": {
+      "task": 2,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 7,
+    "fields": {
+      "task": 2,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 8,
+    "fields": {
+      "task": 2,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 9,
+    "fields": {
+      "task": 3,
+      "text": "Холерический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 10,
+    "fields": {
+      "task": 3,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 11,
+    "fields": {
+      "task": 3,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 12,
+    "fields": {
+      "task": 3,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 13,
+    "fields": {
+      "task": 4,
+      "text": "Холерический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 14,
+    "fields": {
+      "task": 4,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 15,
+    "fields": {
+      "task": 4,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 16,
+    "fields": {
+      "task": 4,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 17,
+    "fields": {
+      "task": 5,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 18,
+    "fields": {
+      "task": 5,
+      "text": "Сангвинический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 19,
+    "fields": {
+      "task": 5,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 20,
+    "fields": {
+      "task": 5,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 21,
+    "fields": {
+      "task": 6,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 22,
+    "fields": {
+      "task": 6,
+      "text": "Сангвинический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 23,
+    "fields": {
+      "task": 6,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 24,
+    "fields": {
+      "task": 6,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 25,
+    "fields": {
+      "task": 7,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 26,
+    "fields": {
+      "task": 7,
+      "text": "Сангвинический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 27,
+    "fields": {
+      "task": 7,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 28,
+    "fields": {
+      "task": 7,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 29,
+    "fields": {
+      "task": 8,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 30,
+    "fields": {
+      "task": 8,
+      "text": "Сангвинический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 31,
+    "fields": {
+      "task": 8,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 32,
+    "fields": {
+      "task": 8,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 33,
+    "fields": {
+      "task": 9,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 34,
+    "fields": {
+      "task": 9,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 35,
+    "fields": {
+      "task": 9,
+      "text": "Флегматический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 36,
+    "fields": {
+      "task": 9,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 37,
+    "fields": {
+      "task": 10,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 38,
+    "fields": {
+      "task": 10,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 39,
+    "fields": {
+      "task": 10,
+      "text": "Флегматический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 40,
+    "fields": {
+      "task": 10,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 41,
+    "fields": {
+      "task": 11,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 42,
+    "fields": {
+      "task": 11,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 43,
+    "fields": {
+      "task": 11,
+      "text": "Флегматический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 44,
+    "fields": {
+      "task": 11,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 45,
+    "fields": {
+      "task": 12,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 46,
+    "fields": {
+      "task": 12,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 47,
+    "fields": {
+      "task": 12,
+      "text": "Флегматический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 48,
+    "fields": {
+      "task": 12,
+      "text": "Меланхолический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 49,
+    "fields": {
+      "task": 13,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 50,
+    "fields": {
+      "task": 13,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 51,
+    "fields": {
+      "task": 13,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 52,
+    "fields": {
+      "task": 13,
+      "text": "Меланхолический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 53,
+    "fields": {
+      "task": 14,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 54,
+    "fields": {
+      "task": 14,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 55,
+    "fields": {
+      "task": 14,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 56,
+    "fields": {
+      "task": 14,
+      "text": "Меланхолический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 57,
+    "fields": {
+      "task": 15,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 58,
+    "fields": {
+      "task": 15,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 59,
+    "fields": {
+      "task": 15,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 60,
+    "fields": {
+      "task": 15,
+      "text": "Меланхолический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 61,
+    "fields": {
+      "task": 16,
+      "text": "Холерический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 62,
+    "fields": {
+      "task": 16,
+      "text": "Сангвинический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 63,
+    "fields": {
+      "task": 16,
+      "text": "Флегматический темперамент",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 64,
+    "fields": {
+      "task": 16,
+      "text": "Меланхолический темперамент",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 65,
+    "fields": {
+      "task": 17,
+      "text": "21,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 66,
+    "fields": {
+      "task": 17,
+      "text": "13,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 67,
+    "fields": {
+      "task": 17,
+      "text": "10,2%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 68,
+    "fields": {
+      "task": 17,
+      "text": "8,2%",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 69,
+    "fields": {
+      "task": 17,
+      "text": "7,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 70,
+    "fields": {
+      "task": 17,
+      "text": "6,4%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 71,
+    "fields": {
+      "task": 17,
+      "text": "5,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 72,
+    "fields": {
+      "task": 17,
+      "text": "4,0%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 73,
+    "fields": {
+      "task": 17,
+      "text": "1,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 74,
+    "fields": {
+      "task": 17,
+      "text": "Выявлена отрицательная рентабельность",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 75,
+    "fields": {
+      "task": 18,
+      "text": "21,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 76,
+    "fields": {
+      "task": 18,
+      "text": "13,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 77,
+    "fields": {
+      "task": 18,
+      "text": "10,2%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 78,
+    "fields": {
+      "task": 18,
+      "text": "8,2%",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 79,
+    "fields": {
+      "task": 18,
+      "text": "7,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 80,
+    "fields": {
+      "task": 18,
+      "text": "6,4%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 81,
+    "fields": {
+      "task": 18,
+      "text": "5,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 82,
+    "fields": {
+      "task": 18,
+      "text": "4,0%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 83,
+    "fields": {
+      "task": 18,
+      "text": "1,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 84,
+    "fields": {
+      "task": 18,
+      "text": "Выявлена отрицательная рентабельность",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 85,
+    "fields": {
+      "task": 19,
+      "text": "21,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 86,
+    "fields": {
+      "task": 19,
+      "text": "13,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 87,
+    "fields": {
+      "task": 19,
+      "text": "10,2%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 88,
+    "fields": {
+      "task": 19,
+      "text": "8,2%",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 89,
+    "fields": {
+      "task": 19,
+      "text": "7,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 90,
+    "fields": {
+      "task": 19,
+      "text": "6,4%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 91,
+    "fields": {
+      "task": 19,
+      "text": "5,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 92,
+    "fields": {
+      "task": 19,
+      "text": "4,0%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 93,
+    "fields": {
+      "task": 19,
+      "text": "1,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 94,
+    "fields": {
+      "task": 19,
+      "text": "Выявлена отрицательная рентабельность",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 95,
+    "fields": {
+      "task": 20,
+      "text": "21,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 96,
+    "fields": {
+      "task": 20,
+      "text": "13,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 97,
+    "fields": {
+      "task": 20,
+      "text": "10,2%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 98,
+    "fields": {
+      "task": 20,
+      "text": "8,2%",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 99,
+    "fields": {
+      "task": 20,
+      "text": "7,6%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 100,
+    "fields": {
+      "task": 20,
+      "text": "6,4%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 101,
+    "fields": {
+      "task": 20,
+      "text": "5,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 102,
+    "fields": {
+      "task": 20,
+      "text": "4,0%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 103,
+    "fields": {
+      "task": 20,
+      "text": "1,5%",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskanswer",
+    "pk": 104,
+    "fields": {
+      "task": 20,
+      "text": "Выявлена отрицательная рентабельность",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 1,
+    "fields": {
+      "category": 1,
+      "complexity": 1,
+      "text": "Ученик 6 класса Тимофей учится с переменным успехом. На уроках не может усидеть на одном месте, часто перебивает учеников и даже самого учителя. К выполнению заданий приступает сразу, но не всегда их заканчивает. Для мальчика характерна резкая смена эмоций и настроения. Его поступки часто импульсивны и малообдуманы. Часто вступает в конфликты с одноклассниками, где может быть инициатором. Тимофей любит рисковать, особенно, если риск — это кратчайшая дорога к цели. При этом он может работать увлечённо, ни усталость, ни другие помехи ему нипочём.",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 118,
+          "end": 190,
+          "category_slug": "strength"
+        },
+        {
+          "start": 191,
+          "end": 270,
+          "category_slug": "balance"
+        },
+        {
+          "start": 271,
+          "end": 380,
+          "category_slug": "mobility"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "unbalanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 2,
+    "fields": {
+      "category": 1,
+      "complexity": 2,
+      "text": "Ученик 6 класса Тимофей учится с переменным успехом. На уроках не может усидеть на одном месте, часто перебивает учеников и даже самого учителя. К выполнению заданий приступает сразу, но не всегда их заканчивает. Для мальчика характерна резкая смена эмоций и настроения. Его поступки часто импульсивны и малообдуманы. Часто вступает в конфликты с одноклассниками, где может быть инициатором. Тимофей любит рисковать, особенно, если риск — это кратчайшая дорога к цели. При этом он может работать увлечённо, ни усталость, ни другие помехи ему нипочём. Иногда, в стрессовой ситуации, например, отвечая у доски или участвуя в соревнованиях, Тимофей показывает худшие результаты по сравнению со спокойной привычной ситуацией (слабость).",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 118,
+          "end": 190,
+          "category_slug": "strength"
+        },
+        {
+          "start": 191,
+          "end": 270,
+          "category_slug": "balance"
+        },
+        {
+          "start": 271,
+          "end": 380,
+          "category_slug": "mobility"
+        },
+        {
+          "start": 381,
+          "end": 530,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "unbalanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 3,
+    "fields": {
+      "category": 1,
+      "complexity": 3,
+      "text": "Ученик 6 класса Тимофей учится с переменным успехом. На уроках не может усидеть на одном месте, часто перебивает учеников и даже самого учителя. Для мальчика характерна резкая смена эмоций и настроения. Его поступки часто импульсивны и малообдуманы. Тимофей любит рисковать, особенно, если риск — это кратчайшая дорога к цели. При этом он может работать увлечённо, ни усталость, ни другие помехи ему нипочём.",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 118,
+          "end": 190,
+          "category_slug": "strength"
+        },
+        {
+          "start": 191,
+          "end": 260,
+          "category_slug": "balance"
+        },
+        {
+          "start": 261,
+          "end": 350,
+          "category_slug": "mobility"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "unbalanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 4,
+    "fields": {
+      "category": 1,
+      "complexity": 4,
+      "text": "Ученик 6 класса Тимофей учится с переменным успехом. На уроках не может усидеть на одном месте, часто перебивает учеников и даже самого учителя. Для мальчика характерна резкая смена эмоций и настроения. Его поступки часто импульсивны и малообдуманы. Тимофей любит рисковать, особенно, если риск — это кратчайшая дорога к цели. При этом он может работать увлечённо, ни усталость, ни другие помехи ему нипочём. Иногда, в стрессовой ситуации, например, отвечая у доски или участвуя в соревнованиях, Тимофей показывает худшие результаты по сравнению со спокойной привычной ситуацией (слабость).",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 118,
+          "end": 190,
+          "category_slug": "strength"
+        },
+        {
+          "start": 191,
+          "end": 260,
+          "category_slug": "balance"
+        },
+        {
+          "start": 261,
+          "end": 350,
+          "category_slug": "mobility"
+        },
+        {
+          "start": 351,
+          "end": 500,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "unbalanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 5,
+    "fields": {
+      "category": 1,
+      "complexity": 1,
+      "text": "Сотрудник М.Д. обладает высокой работоспособностью, легко сосредотачивает внимание, может параллельно выполнять несколько дел, хороший организатор. Легко загорается интересом к новой работе, но быстро угасает, теряет интерес, не способен вникать в детали и не переносит однообразия и монотонности. Хорошо проявляет себя в ответственных ситуациях, сохраняет самообладание в неожиданной и сложной обстановке. Общительный человек, легко сходится с новыми людьми, имеет широкий круг знакомств, хотя не отличается постоянством в общении и привязанностях.",
+      "condition": "Определите тип темперамента сотрудника по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 130,
+          "category_slug": "strength"
+        },
+        {
+          "start": 131,
+          "end": 280,
+          "category_slug": "balance"
+        },
+        {
+          "start": 281,
+          "end": 420,
+          "category_slug": "mobility"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 6,
+    "fields": {
+      "category": 1,
+      "complexity": 2,
+      "text": "Сотрудник М.Д. обладает высокой работоспособностью, легко сосредотачивает внимание, может параллельно выполнять несколько дел, хороший организатор. Легко загорается интересом к новой работе, но быстро угасает, теряет интерес, не способен вникать в детали и не переносит однообразия и монотонности. Хорошо проявляет себя в ответственных ситуациях, сохраняет самообладание в неожиданной и сложной обстановке. Общительный человек, легко сходится с новыми людьми, имеет широкий круг знакомств, хотя не отличается постоянством в общении и привязанностях. Иногда бывает очень чувствителен к замечаниям и критике (слабость).",
+      "condition": "Определите тип темперамента сотрудника по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 130,
+          "category_slug": "strength"
+        },
+        {
+          "start": 131,
+          "end": 280,
+          "category_slug": "balance"
+        },
+        {
+          "start": 281,
+          "end": 420,
+          "category_slug": "mobility"
+        },
+        {
+          "start": 421,
+          "end": 490,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 7,
+    "fields": {
+      "category": 1,
+      "complexity": 3,
+      "text": "Сотрудник М.Д. обладает высокой работоспособностью, легко сосредотачивает внимание, может параллельно выполнять несколько дел, хороший организатор. Не переносит однообразия и монотонности. Общительный человек, легко сходится с новыми людьми, имеет широкий круг знакомств, хотя не отличается постоянством в общении и привязанностях.",
+      "condition": "Определите тип темперамента сотрудника по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 130,
+          "category_slug": "strength"
+        },
+        {
+          "start": 131,
+          "end": 200,
+          "category_slug": "mobility"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 8,
+    "fields": {
+      "category": 1,
+      "complexity": 4,
+      "text": "Сотрудник М.Д. обладает высокой работоспособностью, легко сосредотачивает внимание, может параллельно выполнять несколько дел, хороший организатор. Не переносит однообразия и монотонности. Общительный человек, легко сходится с новыми людьми, имеет широкий круг знакомств, хотя не отличается постоянством в общении и привязанностях. Иногда бывает очень чувствителен к замечаниям и критике (слабость).",
+      "condition": "Определите тип темперамента сотрудника по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 130,
+          "category_slug": "strength"
+        },
+        {
+          "start": 131,
+          "end": 200,
+          "category_slug": "mobility"
+        },
+        {
+          "start": 201,
+          "end": 270,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "mobile"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 9,
+    "fields": {
+      "category": 1,
+      "complexity": 1,
+      "text": "В кардиологическом отделении находится пациент А.С. на плановом обследовании. По характеру пациент спокойный, доброжелательный, терпеливо переносит все назначения врача. На утреннем обходе очень внимательно слушает врача, записывает все рекомендации в блокнот. Среди соседей по палате пользуется авторитетом, но неохотно рассказывает о себе, с медперсоналом вежлив, слабо проявляет свои чувства, в течение дня много читает и спит.",
+      "condition": "Определите тип темперамента пациента по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 73,
+          "end": 190,
+          "category_slug": "strength"
+        },
+        {
+          "start": 191,
+          "end": 290,
+          "category_slug": "balance"
+        },
+        {
+          "start": 291,
+          "end": 380,
+          "category_slug": "mobility"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "inert"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 10,
+    "fields": {
+      "category": 1,
+      "complexity": 2,
+      "text": "В кардиологическом отделении находится пациент А.С. на плановом обследовании. По характеру пациент спокойный, доброжелательный, терпеливо переносит все назначения врача. На утреннем обходе очень внимательно слушает врача, записывает все рекомендации в блокнот. Среди соседей по палате пользуется авторитетом, но неохотно рассказывает о себе, с медперсоналом вежлив, слабо проявляет свои чувства, в течение дня много читает и спит. Когда соседи по палате начинают громко разговаривать или смеяться, А.С. раздражается, может выйти из палаты, давая понять, что ему не комфортно (неуравновешенность).",
+      "condition": "Определите тип темперамента пациента по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 73,
+          "end": 190,
+          "category_slug": "strength"
+        },
+        {
+          "start": 191,
+          "end": 290,
+          "category_slug": "balance"
+        },
+        {
+          "start": 291,
+          "end": 380,
+          "category_slug": "mobility"
+        },
+        {
+          "start": 381,
+          "end": 530,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "inert"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 11,
+    "fields": {
+      "category": 1,
+      "complexity": 3,
+      "text": "В кардиологическом отделении находится пациент А.С. на плановом обследовании. Среди соседей по палате пользуется авторитетом, но неохотно рассказывает о себе. На утреннем обходе очень внимательно слушает врача, записывает все рекомендации в блокнот. С медперсоналом вежлив, слабо проявляет свои чувства, терпеливо переносит все назначения врача.",
+      "condition": "Определите тип темперамента пациента по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 73,
+          "end": 200,
+          "category_slug": "strength"
+        },
+        {
+          "start": 201,
+          "end": 320,
+          "category_slug": "balance"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "inert"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 12,
+    "fields": {
+      "category": 1,
+      "complexity": 4,
+      "text": "В кардиологическом отделении находится пациент А.С. на плановом обследовании. Среди соседей по палате пользуется авторитетом, но неохотно рассказывает о себе. На утреннем обходе очень внимательно слушает врача, записывает все рекомендации в блокнот. С медперсоналом вежлив, слабо проявляет свои чувства, терпеливо переносит все назначения врача. Когда соседи по палате начинают громко разговаривать или смеяться, А.С. раздражается, может выйти из палаты, давая понять, что ему не комфортно (неуравновешенность).",
+      "condition": "Определите тип темперамента пациента по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 73,
+          "end": 200,
+          "category_slug": "strength"
+        },
+        {
+          "start": 201,
+          "end": 320,
+          "category_slug": "balance"
+        },
+        {
+          "start": 321,
+          "end": 480,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "strong",
+        "balance": "balanced",
+        "mobility": "inert"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 13,
+    "fields": {
+      "category": 1,
+      "complexity": 1,
+      "text": "Ученик 8 класса Николай М. на уроках ведёт себя спокойно, поза статичная, часто напряжённая, иногда что-нибудь вертит в руках, настроение может меняться от очень незначительных причин. Подросток болезненно чувствителен. Николай легко теряется. Стоит учителю сделать ему самое мягкое замечание, как мальчик смущается, голос его становится глухим, тихим. Очень сдержан в выражении чувств. Получив двойку, нисколько не изменившись в лице, идёт на место и садится, но дома долго не может успокоиться, не в состоянии приняться за работу. Отвечает на уроке неуверенно, запинаясь, даже если тщательно подготовился. Движения вялые, слабые, говорит медленно, несколько тягуче.",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 180,
+          "category_slug": "strength"
+        },
+        {
+          "start": 181,
+          "end": 380,
+          "category_slug": "balance"
+        },
+        {
+          "start": 381,
+          "end": 520,
+          "category_slug": "mobility"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "weak",
+        "balance": "unbalanced",
+        "mobility": "restrained"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 14,
+    "fields": {
+      "category": 1,
+      "complexity": 2,
+      "text": "Ученик 8 класса Николай М. на уроках ведёт себя спокойно, поза статичная, часто напряжённая, иногда что-нибудь вертит в руках, настроение может меняться от очень незначительных причин. Подросток болезненно чувствителен. Николай легко теряется. Стоит учителю сделать ему самое мягкое замечание, как мальчик смущается, голос его становится глухим, тихим. Очень сдержан в выражении чувств. Получив двойку, нисколько не изменившись в лице, идёт на место и садится, но дома долго не может успокоиться, не в состоянии приняться за работу. Отвечает на уроке неуверенно, запинаясь, даже если тщательно подготовился. Движения вялые, слабые, говорит медленно, несколько тягуче. В классе имеет несколько друзей, с остальными одноклассниками общается свободно.",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 180,
+          "category_slug": "strength"
+        },
+        {
+          "start": 181,
+          "end": 380,
+          "category_slug": "balance"
+        },
+        {
+          "start": 381,
+          "end": 520,
+          "category_slug": "mobility"
+        },
+        {
+          "start": 521,
+          "end": 600,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "weak",
+        "balance": "unbalanced",
+        "mobility": "restrained"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 15,
+    "fields": {
+      "category": 1,
+      "complexity": 3,
+      "text": "Ученик 8 класса Николай М. болезненно чувствителен, легко теряется. Стоит учителю сделать ему самое мягкое замечание, как мальчик смущается, голос его становится глухим, тихим. Очень сдержан в выражении чувств. Получив двойку, нисколько не изменившись в лице, идёт на место и садится, но дома долго не может успокоиться, не в состоянии приняться за работу. Движения вялые, слабые, говорит медленно, несколько тягуче.",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 170,
+          "category_slug": "strength"
+        },
+        {
+          "start": 171,
+          "end": 320,
+          "category_slug": "balance"
+        },
+        {
+          "start": 321,
+          "end": 420,
+          "category_slug": "mobility"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "weak",
+        "balance": "unbalanced",
+        "mobility": "restrained"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 16,
+    "fields": {
+      "category": 1,
+      "complexity": 4,
+      "text": "Ученик 8 класса Николай М. болезненно чувствителен, легко теряется. Стоит учителю сделать ему самое мягкое замечание, как мальчик смущается, голос его становится глухим, тихим. Очень сдержан в выражении чувств. Получив двойку, нисколько не изменившись в лице, идёт на место и садится, но дома долго не может успокоиться, не в состоянии приняться за работу. Движения вялые, слабые, говорит медленно, несколько тягуче. В классе имеет несколько друзей, с остальными одноклассниками общается свободно.",
+      "condition": "Определите тип темперамента ученика по классификации И.П. Павлова, основанной на 4-х типах высшей нервной деятельности.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 170,
+          "category_slug": "strength"
+        },
+        {
+          "start": 171,
+          "end": 320,
+          "category_slug": "balance"
+        },
+        {
+          "start": 321,
+          "end": 420,
+          "category_slug": "mobility"
+        },
+        {
+          "start": 421,
+          "end": 500,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "strength": "weak",
+        "balance": "unbalanced",
+        "mobility": "restrained"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 17,
+    "fields": {
+      "category": 2,
+      "complexity": 1,
+      "text": "Товарооборот аптечной организации в розничных ценах в мае месяце составил 2 521 769 руб. Средний уровень реализованных торговых наложений за данный месяц — 21%, сумма издержек обращения — 323 500 руб.",
+      "condition": "Рассчитайте показатель рентабельности аптечной организации за май месяц.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 80,
+          "category_slug": "sales-volume"
+        },
+        {
+          "start": 81,
+          "end": 155,
+          "category_slug": "trade-markup"
+        },
+        {
+          "start": 156,
+          "end": 215,
+          "category_slug": "expenses"
+        }
+      ],
+      "correct_characteristics": {
+        "sales-volume": "used",
+        "trade-markup": "used",
+        "expenses": "used"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 18,
+    "fields": {
+      "category": 2,
+      "complexity": 2,
+      "text": "Товарооборот аптечной организации в розничных ценах в мае месяце составил 2 521 769 руб. Количество кассовых чеков в месяц — 7 235. Средний уровень реализованных торговых наложений за данный месяц — 21%, сумма издержек обращения — 323 500 руб.",
+      "condition": "Рассчитайте показатель рентабельности аптечной организации за май месяц.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 80,
+          "category_slug": "sales-volume"
+        },
+        {
+          "start": 81,
+          "end": 130,
+          "category_slug": "useless"
+        },
+        {
+          "start": 131,
+          "end": 210,
+          "category_slug": "trade-markup"
+        },
+        {
+          "start": 211,
+          "end": 270,
+          "category_slug": "expenses"
+        }
+      ],
+      "correct_characteristics": {
+        "sales-volume": "used",
+        "trade-markup": "used",
+        "expenses": "used"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 19,
+    "fields": {
+      "category": 2,
+      "complexity": 3,
+      "text": "Товарооборот аптечной организации в розничных ценах в мае месяце составил 2 521 769 руб. Средний уровень реализованных торговых наложений за данный месяц — 21%.",
+      "condition": "Рассчитайте показатель рентабельности аптечной организации за май месяц.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 80,
+          "category_slug": "sales-volume"
+        },
+        {
+          "start": 81,
+          "end": 155,
+          "category_slug": "trade-markup"
+        }
+      ],
+      "correct_characteristics": {
+        "sales-volume": "used",
+        "trade-markup": "used",
+        "expenses": "used"
+      }
+    }
+  },
+  {
+    "model": "main.task",
+    "pk": 20,
+    "fields": {
+      "category": 2,
+      "complexity": 4,
+      "text": "Товарооборот аптечной организации в розничных ценах в мае месяце составил 2 521 769 руб. Средний уровень реализованных торговых наложений за данный месяц — 21%. Количество кассовых чеков в месяц — 7 235.",
+      "condition": "Рассчитайте показатель рентабельности аптечной организации за май месяц.",
+      "reference_markup": [
+        {
+          "start": 0,
+          "end": 80,
+          "category_slug": "sales-volume"
+        },
+        {
+          "start": 81,
+          "end": 155,
+          "category_slug": "trade-markup"
+        },
+        {
+          "start": 156,
+          "end": 205,
+          "category_slug": "useless"
+        }
+      ],
+      "correct_characteristics": {
+        "sales-volume": "used",
+        "trade-markup": "used",
+        "expenses": "used"
+      }
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 1,
+    "fields": {
+      "task": 3,
+      "text": "Как быстро ученик включается в работу?",
+      "answer": "К выполнению заданий приступает сразу, но не всегда их заканчивает.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 2,
+    "fields": {
+      "task": 3,
+      "text": "Часто ли ученик вступает в конфликты?",
+      "answer": "В конфликты вступает часто.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 3,
+    "fields": {
+      "task": 3,
+      "text": "Какова успеваемость ученика?",
+      "answer": "Учится с переменным успехом.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 4,
+    "fields": {
+      "task": 4,
+      "text": "Как быстро ученик включается в работу?",
+      "answer": "К выполнению заданий приступает сразу, но не всегда их заканчивает.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 5,
+    "fields": {
+      "task": 4,
+      "text": "Часто ли ученик вступает в конфликты?",
+      "answer": "В конфликты вступает часто.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 6,
+    "fields": {
+      "task": 4,
+      "text": "Как проявляет себя в ответственных (стрессовых) ситуациях?",
+      "answer": "Мобилизуется, быстро и энергично принимается за дело, в том числе и за новое (сила).",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 7,
+    "fields": {
+      "task": 4,
+      "text": "Какова успеваемость ученика?",
+      "answer": "Учится с переменным успехом.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 8,
+    "fields": {
+      "task": 7,
+      "text": "Как быстро включается в работу?",
+      "answer": "Легко загорается интересом к новой работе, но быстро угасает, теряет интерес, не способен вникать в детали.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 9,
+    "fields": {
+      "task": 7,
+      "text": "Как проявляет себя в ответственных ситуациях?",
+      "answer": "Хорошо проявляет себя в ответственных ситуациях, сохраняет самообладание в неожиданной и сложной обстановке.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 10,
+    "fields": {
+      "task": 7,
+      "text": "Как часто бывает чувствителен к критике?",
+      "answer": "Иногда бывает чувствителен к замечаниям.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 11,
+    "fields": {
+      "task": 8,
+      "text": "Как быстро включается в работу?",
+      "answer": "Легко загорается интересом к новой работе, но быстро угасает, теряет интерес, не способен вникать в детали.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 12,
+    "fields": {
+      "task": 8,
+      "text": "Как проявляет себя в ответственных ситуациях?",
+      "answer": "Хорошо проявляет себя в ответственных ситуациях, сохраняет самообладание в неожиданной и сложной обстановке.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 13,
+    "fields": {
+      "task": 8,
+      "text": "Как часто бывает чувствителен к критике и замечаниям?",
+      "answer": "Редко. В большинстве ситуаций легко и спокойно реагирует на критику, необидчив (сила).",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 14,
+    "fields": {
+      "task": 8,
+      "text": "Ко всей ли критике чувствителен?",
+      "answer": "Чувствителен к критике и замечаниям, исходящим от близких людей.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 15,
+    "fields": {
+      "task": 11,
+      "text": "Как проявляет себя в общении?",
+      "answer": "По характеру пациент спокойный, доброжелательный.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 16,
+    "fields": {
+      "task": 11,
+      "text": "Чем предпочитает заниматься в свободное время?",
+      "answer": "В течение дня много читает и спит.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 17,
+    "fields": {
+      "task": 11,
+      "text": "Как относится к медицинскому персоналу?",
+      "answer": "С медперсоналом вежлив, слабо проявляет свои чувства.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 18,
+    "fields": {
+      "task": 12,
+      "text": "Как проявляет себя в общении?",
+      "answer": "По характеру пациент спокойный, доброжелательный.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 19,
+    "fields": {
+      "task": 12,
+      "text": "Чем предпочитает заниматься в свободное время?",
+      "answer": "В течение дня много читает и спит.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 20,
+    "fields": {
+      "task": 12,
+      "text": "Как реагирует в ситуации нарушения покоя?",
+      "answer": "Обладает выдержкой, спокойно реагирует на раздражающие факторы (уравновешенность).",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 21,
+    "fields": {
+      "task": 12,
+      "text": "Как относится к назначениям врача?",
+      "answer": "Терпеливо переносит все назначения.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 22,
+    "fields": {
+      "task": 15,
+      "text": "Как Николай ведёт себя на уроках?",
+      "answer": "На уроках ведёт себя спокойно, поза статичная, часто напряжённая.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 23,
+    "fields": {
+      "task": 15,
+      "text": "Что является поводом для смены настроения?",
+      "answer": "Настроение может меняться от очень незначительных причин.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 24,
+    "fields": {
+      "task": 15,
+      "text": "Как работает на уроке?",
+      "answer": "Отвечает на уроке неуверенно, запинаясь, даже если тщательно подготовился к уроку.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 25,
+    "fields": {
+      "task": 15,
+      "text": "Есть ли у Николая друзья в классе?",
+      "answer": "В классе имеет несколько друзей.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 26,
+    "fields": {
+      "task": 16,
+      "text": "Как Николай ведёт себя на уроках?",
+      "answer": "На уроках ведёт себя спокойно, поза статичная, часто напряжённая.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 27,
+    "fields": {
+      "task": 16,
+      "text": "Что является поводом для смены настроения?",
+      "answer": "Настроение может меняться от очень незначительных причин.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 28,
+    "fields": {
+      "task": 16,
+      "text": "Как работает на уроке?",
+      "answer": "Отвечает на уроке неуверенно, запинаясь, даже если тщательно подготовился к уроку.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 29,
+    "fields": {
+      "task": 16,
+      "text": "Много ли у Николая друзей?",
+      "answer": "Друзей мало, как правило за пределами школы.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 30,
+    "fields": {
+      "task": 16,
+      "text": "Как общается с одноклассниками?",
+      "answer": "В общении замкнут, с трудом сближается с людьми.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 31,
+    "fields": {
+      "task": 19,
+      "text": "Какова сумма расходов на продажу (издержек обращения)?",
+      "answer": "323 500 руб.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 32,
+    "fields": {
+      "task": 19,
+      "text": "Какое количество кассовых чеков было в мае?",
+      "answer": "7 235 чеков.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 33,
+    "fields": {
+      "task": 20,
+      "text": "Какова сумма расходов на продажу (издержек обращения)?",
+      "answer": "323 500 руб.",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 34,
+    "fields": {
+      "task": 20,
+      "text": "Какое количество посетителей в мае приобрели товары?",
+      "answer": "7 136 человек.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 35,
+    "fields": {
+      "task": 20,
+      "text": "На какую сумму отпущены товары в медицинские организации?",
+      "answer": "На сумму 1 176 672 руб.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.taskquestion",
+    "pk": 36,
+    "fields": {
+      "task": 20,
+      "text": "Какую форму собственности имеет аптечная организация?",
+      "answer": "Государственную форму собственности.",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 8,
+    "fields": {
+      "category_markup": 4,
+      "name": "Используется в расчёте",
+      "slug": "used"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 9,
+    "fields": {
+      "category_markup": 5,
+      "name": "Используется в расчёте",
+      "slug": "used"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 10,
+    "fields": {
+      "category_markup": 6,
+      "name": "Используется в расчёте",
+      "slug": "used"
+    }
+  },
+  {
+    "model": "main.markupoption",
+    "pk": 11,
+    "fields": {
+      "category_markup": 7,
+      "name": "Не используется в расчёте",
+      "slug": "not-used"
+    }
+  }
+]
