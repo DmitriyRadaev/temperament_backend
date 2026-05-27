@@ -207,5 +207,5 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_PATH': '/',
     'AUTH_COOKIE_SAMESITE': "Lax",
 }
-APPEND_SLASH = False
+
 
