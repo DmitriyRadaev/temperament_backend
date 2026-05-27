@@ -8,58 +8,58 @@ from drf_spectacular.views import SpectacularSwaggerView, SpectacularAPIView
 from main import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('logic-trainer/admin/', admin.site.urls),
 
     # Авторизация
-    path("api/auth/login/",         views.loginView,                        name="login"),
-    path("api/auth/logout/",        views.logoutView,                       name="logout"),
-    path("api/auth/refresh_token/", views.CookieTokenRefreshView.as_view(), name="token_refresh"),
+    path("logic-trainer/api/auth/login/",         views.loginView,                        name="login"),
+    path("logic-trainer/api/auth/logout/",        views.logoutView,                       name="logout"),
+    path("logic-trainer/api/auth/refresh_token/", views.CookieTokenRefreshView.as_view(), name="token_refresh"),
 
     # Регистрация
-    path("api/auth/register/student/", views.StudentRegisterView.as_view(), name="student_register"),
-    path("api/auth/register/admin/",   views.AdminRegisterView.as_view(),   name="admin_register"),
+    path("logic-trainer/api/auth/register/student/", views.StudentRegisterView.as_view(), name="student_register"),
+    path("logic-trainer/api/auth/register/admin/",   views.AdminRegisterView.as_view(),   name="admin_register"),
 
     # TaskCategory
-    path("api/task-category/all/",             views.TaskCategoryListView.as_view()),
-    path("api/task-category/create/",          views.TaskCategoryCreateView.as_view()),
-    path("api/task-category/<int:pk>/",        views.TaskCategoryRetrieveView.as_view()),
-    path("api/task-category/<int:pk>/update/", views.TaskCategoryUpdateView.as_view()),
-    path("api/task-category/<int:pk>/delete/", views.TaskCategoryDestroyView.as_view()),
+    path("logic-trainer/api/task-category/all/",             views.TaskCategoryListView.as_view()),
+    path("logic-trainer/api/task-category/create/",          views.TaskCategoryCreateView.as_view()),
+    path("logic-trainer/api/task-category/<int:pk>/",        views.TaskCategoryRetrieveView.as_view()),
+    path("logic-trainer/api/task-category/<int:pk>/update/", views.TaskCategoryUpdateView.as_view()),
+    path("logic-trainer/api/task-category/<int:pk>/delete/", views.TaskCategoryDestroyView.as_view()),
 
     # СategoryConfig
-    path("api/category-config/all/",             views.CategoryConfigListView.as_view()),
-    path("api/category-config/create/",          views.CategoryConfigCreateView.as_view()),
-    path("api/category-config/<int:pk>/",        views.CategoryConfigRetrieveView.as_view()),
-    path("api/category-config/<int:pk>/update/", views.CategoryConfigUpdateView.as_view()),
-    path("api/category-config/<int:pk>/delete/", views.CategoryConfigDestroyView.as_view()),
+    path("logic-trainer/api/category-config/all/",             views.CategoryConfigListView.as_view()),
+    path("logic-trainer/api/category-config/create/",          views.CategoryConfigCreateView.as_view()),
+    path("logic-trainer/api/category-config/<int:pk>/",        views.CategoryConfigRetrieveView.as_view()),
+    path("logic-trainer/api/category-config/<int:pk>/update/", views.CategoryConfigUpdateView.as_view()),
+    path("logic-trainer/api/category-config/<int:pk>/delete/", views.CategoryConfigDestroyView.as_view()),
 
     # TaskComplexity
-    path("api/complexity/all/",             views.ComplexityListView.as_view()),
-    path("api/complexity/create/",          views.ComplexityCreateView.as_view()),
-    path("api/complexity/<int:pk>/",        views.ComplexityRetrieveView.as_view()),
-    path("api/complexity/<int:pk>/update/", views.ComplexityUpdateView.as_view()),
-    path("api/complexity/<int:pk>/delete/", views.ComplexityDestroyView.as_view()),
+    path("logic-trainer/api/complexity/all/",             views.ComplexityListView.as_view()),
+    path("logic-trainer/api/complexity/create/",          views.ComplexityCreateView.as_view()),
+    path("logic-trainer/api/complexity/<int:pk>/",        views.ComplexityRetrieveView.as_view()),
+    path("logic-trainer/api/complexity/<int:pk>/update/", views.ComplexityUpdateView.as_view()),
+    path("logic-trainer/api/complexity/<int:pk>/delete/", views.ComplexityDestroyView.as_view()),
 
     # ColorsMarkup
-    path("api/colors/all/",             views.ColorsMarkupListView.as_view()),
-    path("api/colors/create/",          views.ColorsMarkupCreateView.as_view()),
-    path("api/colors/<int:pk>/",        views.ColorsMarkupRetrieveView.as_view()),
-    path("api/colors/<int:pk>/update/", views.ColorsMarkupUpdateView.as_view()),
-    path("api/colors/<int:pk>/delete/", views.ColorsMarkupDestroyView.as_view()),
+    path("logic-trainer/api/colors/all/",             views.ColorsMarkupListView.as_view()),
+    path("logic-trainer/api/colors/create/",          views.ColorsMarkupCreateView.as_view()),
+    path("logic-trainer/api/colors/<int:pk>/",        views.ColorsMarkupRetrieveView.as_view()),
+    path("logic-trainer/api/colors/<int:pk>/update/", views.ColorsMarkupUpdateView.as_view()),
+    path("logic-trainer/api/colors/<int:pk>/delete/", views.ColorsMarkupDestroyView.as_view()),
 
     # CategoryMarkup
-    path("api/markup/all/",             views.CategoryMarkupListView.as_view()),
-    path("api/markup/create/",          views.CategoryMarkupCreateView.as_view()),
-    path("api/markup/<int:pk>/",        views.CategoryMarkupRetrieveView.as_view()),
-    path("api/markup/<int:pk>/update/", views.CategoryMarkupUpdateView.as_view()),
-    path("api/markup/<int:pk>/delete/", views.CategoryMarkupDestroyView.as_view()),
+    path("logic-trainer/api/markup/all/",             views.CategoryMarkupListView.as_view()),
+    path("logic-trainer/api/markup/create/",          views.CategoryMarkupCreateView.as_view()),
+    path("logic-trainer/api/markup/<int:pk>/",        views.CategoryMarkupRetrieveView.as_view()),
+    path("logic-trainer/api/markup/<int:pk>/update/", views.CategoryMarkupUpdateView.as_view()),
+    path("logic-trainer/api/markup/<int:pk>/delete/", views.CategoryMarkupDestroyView.as_view()),
 
     # MarkupOption
-    path("api/markup-option/all/",             views.MarkupOptionListView.as_view()),
-    path("api/markup-option/create/",          views.MarkupOptionCreateView.as_view()),
-    path("api/markup-option/<int:pk>/",        views.MarkupOptionRetrieveView.as_view()),
-    path("api/markup-option/<int:pk>/update/", views.MarkupOptionUpdateView.as_view()),
-    path("api/markup-option/<int:pk>/delete/", views.MarkupOptionDestroyView.as_view()),
+    path("logic-trainer/api/markup-option/all/",             views.MarkupOptionListView.as_view()),
+    path("logic-trainer/api/markup-option/create/",          views.MarkupOptionCreateView.as_view()),
+    path("logic-trainer/api/markup-option/<int:pk>/",        views.MarkupOptionRetrieveView.as_view()),
+    path("logic-trainer/api/markup-option/<int:pk>/update/", views.MarkupOptionUpdateView.as_view()),
+    path("logic-trainer/api/markup-option/<int:pk>/delete/", views.MarkupOptionDestroyView.as_view()),
 
     # Task
     path("api/task/all/",             views.TaskListView.as_view()),
