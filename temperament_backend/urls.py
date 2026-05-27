@@ -11,7 +11,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Авторизация
-    path("api/auth/login/",         views.loginView,                        name="login"),
+    path("api/auth/login",         views.loginView,                        name="login"),
     path("api/auth/logout/",        views.logoutView,                       name="logout"),
     path("api/auth/refresh_token/", views.CookieTokenRefreshView.as_view(), name="token_refresh"),
 
