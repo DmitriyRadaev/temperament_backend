@@ -727,6 +727,7 @@ class SubmissionDestroyView(APIView):
 # EVALUATION MIXIN
 
 def _slug_to_name(markup, slug):
+    """Переводит slug опции в человекочитаемое название через MarkupOption."""
     if not slug:
         return slug
     option = markup.options.filter(slug=slug).first()
@@ -997,11 +998,15 @@ _task_student_schema = TaskStudentSchemaSerializer()  # инстанс для о
 )
 class EducationTasksAPI(APIView):
     def get(self, request):
-        res = [
-            TaskStudentSerializer(Task.objects.filter(complexity__level=lv).order_by('?').first()).data
-            for lv in [1, 2, 3, 4]
-            if Task.objects.filter(complexity__level=lv).exists()
-        ]
+        category_id = request.query_params.get('category_id')
+        res = []
+        for lv in [1, 2, 3, 4]:
+            qs = Task.objects.filter(complexity__level=lv)
+            if category_id:
+                qs = qs.filter(category_id=category_id)
+            task = qs.order_by('?').first()
+            if task:
+                res.append(TaskStudentSerializer(task).data)
         return ok(res)
 
 
@@ -1033,7 +1038,11 @@ class EducationSubmitAPI(APIView, EvaluationMixin):
 )
 class ControlTaskAPI(APIView):
     def get(self, request):
-        t = Task.objects.filter(complexity__level__in=[3, 4]).order_by('?').first()
+        category_id = request.query_params.get('category_id')
+        qs = Task.objects.filter(complexity__level__in=[3, 4])
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+        t = qs.order_by('?').first()
         if not t:
             return err("Нет доступных задач для контроля", status_code=status.HTTP_404_NOT_FOUND)
         return ok(TaskStudentSerializer(t).data)
